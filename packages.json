@@ -1,0 +1,15 @@
+{
+  "name": "moral-weights-explorer",
+  "version": "1.0.0",
+  "description": "A trolley problem simulator for exploring moral intuitions",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": ["ethics", "trolley-problem", "moral-weights", "survey"],
+  "license": "MIT"
+}

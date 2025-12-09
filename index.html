@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moral Weights Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-primary: #58a6ff;
+            --accent-secondary: #3fb950;
+            --accent-warm: #d29922;
+            --border-default: #30363d;
+            --border-muted: #21262d;
+            --selection-a: #2d4a3e;
+            --selection-a-border: #3fb950;
+            --selection-b: #2d3a4a;
+            --selection-b-border: #58a6ff;
+            --negative: #f85149;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        h1 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .scenario-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .scenario-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .scenario-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent-warm);
+            background: rgba(210, 153, 34, 0.1);
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+        }
+
+        .scenario-framing {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+        }
+
+        .scenario-number {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .scenario-question {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.4rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .choices {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .choice-btn {
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-default);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            color: var(--text-primary);
+        }
+
+        .choice-btn:hover {
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        .choice-btn.selected-a {
+            background: var(--selection-a);
+            border-color: var(--selection-a-border);
+        }
+
+        .choice-btn.selected-b {
+            background: var(--selection-b);
+            border-color: var(--selection-b-border);
+        }
+
+        .choice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .choice-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .choice-tags {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+
+        .choice-tag {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            color: var(--text-muted);
+        }
+
+        .choice-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .results-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-section h2 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .weight-category {
+            margin-bottom: 2rem;
+        }
+
+        .weight-category-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-muted);
+        }
+
+        .weight-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 0;
+            gap: 1rem;
+        }
+
+        .weight-label {
+            min-width: 140px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .weight-bar-container {
+            flex: 1;
+            height: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: visible;
+            position: relative;
+        }
+
+        .weight-bar-zero {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--text-muted);
+            z-index: 1;
+        }
+
+        .weight-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 6px;
+            transition: all 0.5s ease;
+        }
+
+        .weight-bar.positive {
+            left: 50%;
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+        }
+
+        .weight-bar.negative {
+            right: 50%;
+            background: linear-gradient(90deg, var(--negative), #ff8c82);
+        }
+
+        .weight-value {
+            min-width: 70px;
+            text-align: right;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .weight-value.positive {
+            color: var(--accent-secondary);
+        }
+
+        .weight-value.negative {
+            color: var(--negative);
+        }
+
+        .weight-value.neutral {
+            color: var(--text-muted);
+        }
+
+        .weight-comparisons {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            min-width: 40px;
+        }
+
+        .untested-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .untested-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .untested-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .untested-item {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--text-muted);
+        }
+
+        .response-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            gap: 1rem;
+        }
+
+        .response-question {
+            flex: 1;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .response-question strong {
+            color: var(--text-primary);
+        }
+
+        .response-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .response-badge.choice-a {
+            background: var(--selection-a);
+            color: var(--selection-a-border);
+        }
+
+        .response-badge.choice-b {
+            background: var(--selection-b);
+            color: var(--selection-b-border);
+        }
+
+        .insights-box {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(63, 185, 80, 0.1));
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .insights-box h3 {
+            color: var(--accent-primary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .insight-item {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            padding-left: 1rem;
+            border-left: 2px solid var(--accent-secondary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--bg-secondary);
+            border-color: var(--text-muted);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #79b8ff;
+            border-color: #79b8ff;
+        }
+
+        .btn-danger {
+            background: rgba(248, 81, 73, 0.1);
+            border-color: #f85149;
+            color: #f85149;
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 81, 73, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .intro-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .intro-card h2 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .intro-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .intro-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        .start-btn {
+            margin-top: 1.5rem;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .session-info {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .session-info code {
+            background: var(--bg-primary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .comparison-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .export-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .export-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .export-textarea {
+            width: 100%;
+            height: 150px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 0.8rem;
+            padding: 1rem;
+            resize: vertical;
+        }
+
+        .methodology-note {
+            background: rgba(88, 166, 255, 0.05);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .methodology-note strong {
+            color: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Moral Weights Explorer</h1>
+            <p class="subtitle">Explore how you weigh different lives and welfare through ethical trade-off scenarios</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="scenarios">Scenarios</button>
+            <button class="tab" data-tab="results">Results</button>
+            <button class="tab" data-tab="export">Export Data</button>
+        </div>
+
+        <!-- Scenarios Panel -->
+        <div id="scenarios" class="panel active">
+            <div id="introSection">
+                <div class="intro-card">
+                    <h2>Welcome to the Moral Weights Explorer</h2>
+                    <p>This tool presents you with a series of ethical dilemmas to help explore and understand your moral intuitions. Each scenario asks you to choose between two outcomes — there are no right or wrong answers.</p>
+                    <p>Your responses will be analysed using an Elo-style ranking system to reveal the relative moral weight you place on different beings. Weights are shown relative to a baseline of 0, with positive values indicating higher priority and negative values indicating lower priority.</p>
+                    <p>The scenarios use various framings (saving, preventing harm, trade-offs) and different numbers to build a nuanced picture of your moral weights.</p>
+                    <button class="btn btn-primary start-btn" id="startBtn">Begin Exploration</button>
+                </div>
+            </div>
+
+            <div id="scenarioSection" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-text">
+                        <span id="progressText">Question 1 of 50</span>
+                        <span id="progressPercent">0% complete</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <div id="scenarioContainer"></div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results" class="panel">
+            <div class="session-info" id="sessionInfo">
+                Session ID: <code id="sessionId">-</code> | 
+                Responses: <code id="responseCount">0</code> |
+                Started: <code id="sessionStart">-</code>
+            </div>
+
+            <div class="methodology-note">
+                <strong>How weights are calculated:</strong> Each entity starts at 0. When you choose to prioritise one entity over another, the winner gains points and the loser loses points. The magnitude depends on the numbers involved (choosing 1 human over 100 mice is weighted differently than 1 human over 1 mouse). Entities with few comparisons show preliminary scores.
+            </div>
+
+            <div class="comparison-stats" id="comparisonStats">
+                <div class="stat-card">
+                    <div class="stat-value" id="statAnswered">0</div>
+                    <div class="stat-label">Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRemaining">0</div>
+                    <div class="stat-label">Remaining</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statEntities">0</div>
+                    <div class="stat-label">Entities Compared</div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2>Moral Weights (Relative Ranking)</h2>
+                <div id="weightsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚖️</div>
+                        <p>Complete some scenarios to see your moral weights!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2>Category Averages</h2>
+                <div id="categoryWeights">
+                    <div class="empty-state">
+                        <p>Complete some scenarios to see category weights.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="untested-section">
+                <h3>🔍 Not Yet Compared</h3>
+                <div class="untested-grid" id="untestedList"></div>
+            </div>
+
+            <div class="results-section">
+                <h2>Response History</h2>
+                <div id="responseList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No responses recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insights-box" id="insightsBox" style="display: none;">
+                <h3>📊 Analysis Insights</h3>
+                <div id="insightsContent"></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-danger" id="resetBtn">Reset All Responses</button>
+            </div>
+        </div>
+
+        <!-- Export Panel -->
+        <div id="export" class="panel">
+            <div class="results-section">
+                <h2>Export Your Data</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Copy or download your complete response data for analysis.</p>
+                
+                <div class="export-section">
+                    <h3>JSON Data</h3>
+                    <textarea class="export-textarea" id="exportData" readonly></textarea>
+                    <div class="btn-group">
+                        <button class="btn" id="copyDataBtn">Copy to Clipboard</button>
+                        <button class="btn btn-primary" id="downloadDataBtn">Download JSON</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // ENTITY DEFINITIONS WITH CATEGORIES
+        // ============================================
+        const entities = {
+            // Humans - General
+            human: { 
+                name: 'human', 
+                display: 'Human', 
+                categories: ['person', 'human', 'sentient']
+            },
+            child: { 
+                name: 'child', 
+                display: 'Child', 
+                categories: ['person', 'human', 'sentient', 'vulnerable', 'young']
+            },
+            adult: { 
+                name: 'adult', 
+                display: 'Adult', 
+                categories: ['person', 'human', 'sentient']
+            },
+            elderly: { 
+                name: 'elderly', 
+                display: 'Elderly person', 
+                categories: ['person', 'human', 'sentient', 'vulnerable']
+            },
+            parent: { 
+                name: 'parent', 
+                display: 'Parent', 
+                categories: ['person', 'human', 'sentient', 'caregiver']
+            },
+            pregnant: { 
+                name: 'pregnant', 
+                display: 'Pregnant person', 
+                categories: ['person', 'human', 'sentient', 'vulnerable']
+            },
+            // Humans - Nationalities/Groups
+            american: { 
+                name: 'american', 
+                display: 'American', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'western']
+            },
+            british: { 
+                name: 'british', 
+                display: 'British person', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'western']
+            },
+            palestinian: { 
+                name: 'palestinian', 
+                display: 'Palestinian', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'middle-eastern']
+            },
+            israeli: { 
+                name: 'israeli', 
+                display: 'Israeli', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'middle-eastern']
+            },
+            chinese: { 
+                name: 'chinese', 
+                display: 'Chinese person', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'asian']
+            },
+            indian: { 
+                name: 'indian', 
+                display: 'Indian person', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'asian']
+            },
+            nigerian: { 
+                name: 'nigerian', 
+                display: 'Nigerian', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'african']
+            },
+            ukrainian: { 
+                name: 'ukrainian', 
+                display: 'Ukrainian', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'european']
+            },
+            russian: { 
+                name: 'russian', 
+                display: 'Russian', 
+                categories: ['person', 'human', 'sentient', 'nationality', 'european']
+            },
+            // Animals - Great Apes
+            chimpanzee: { 
+                name: 'chimpanzee', 
+                display: 'Chimpanzee', 
+                categories: ['animal', 'mammal', 'primate', 'great-ape', 'sentient', 'wild', 'intelligent']
+            },
+            gorilla: { 
+                name: 'gorilla', 
+                display: 'Gorilla', 
+                categories: ['animal', 'mammal', 'primate', 'great-ape', 'sentient', 'wild', 'intelligent']
+            },
+            orangutan: { 
+                name: 'orangutan', 
+                display: 'Orangutan', 
+                categories: ['animal', 'mammal', 'primate', 'great-ape', 'sentient', 'wild', 'intelligent']
+            },
+            // Animals - Other Primates
+            monkey: { 
+                name: 'monkey', 
+                display: 'Monkey', 
+                categories: ['animal', 'mammal', 'primate', 'sentient', 'lab-animal']
+            },
+            // Animals - Marine Mammals
+            dolphin: { 
+                name: 'dolphin', 
+                display: 'Dolphin', 
+                categories: ['animal', 'mammal', 'marine', 'sentient', 'wild', 'intelligent']
+            },
+            whale: { 
+                name: 'whale', 
+                display: 'Whale', 
+                categories: ['animal', 'mammal', 'marine', 'sentient', 'wild', 'intelligent']
+            },
+            // Animals - Large Land Mammals
+            elephant: { 
+                name: 'elephant', 
+                display: 'Elephant', 
+                categories: ['animal', 'mammal', 'sentient', 'wild', 'intelligent']
+            },
+            // Animals - Pets
+            dog: { 
+                name: 'dog', 
+                display: 'Dog', 
+                categories: ['animal', 'mammal', 'pet', 'sentient', 'domestic', 'companion']
+            },
+            cat: { 
+                name: 'cat', 
+                display: 'Cat', 
+                categories: ['animal', 'mammal', 'pet', 'sentient', 'domestic', 'companion']
+            },
+            // Animals - Farm Animals
+            pig: { 
+                name: 'pig', 
+                display: 'Pig', 
+                categories: ['animal', 'mammal', 'farm', 'sentient', 'livestock', 'intelligent']
+            },
+            cow: { 
+                name: 'cow', 
+                display: 'Cow', 
+                categories: ['animal', 'mammal', 'farm', 'sentient', 'livestock']
+            },
+            sheep: { 
+                name: 'sheep', 
+                display: 'Sheep', 
+                categories: ['animal', 'mammal', 'farm', 'sentient', 'livestock']
+            },
+            chicken: { 
+                name: 'chicken', 
+                display: 'Chicken', 
+                categories: ['animal', 'bird', 'farm', 'sentient', 'livestock']
+            },
+            // Animals - Lab Animals
+            mouse: { 
+                name: 'mouse', 
+                display: 'Mouse', 
+                categories: ['animal', 'mammal', 'rodent', 'sentient', 'lab-animal']
+            },
+            rat: { 
+                name: 'rat', 
+                display: 'Rat', 
+                categories: ['animal', 'mammal', 'rodent', 'sentient', 'lab-animal']
+            },
+            rabbit: { 
+                name: 'rabbit', 
+                display: 'Rabbit', 
+                categories: ['animal', 'mammal', 'sentient', 'lab-animal', 'pet']
+            },
+            // Animals - Other
+            fish: { 
+                name: 'fish', 
+                display: 'Fish', 
+                categories: ['animal', 'aquatic', 'vertebrate']
+            },
+            insect: { 
+                name: 'insect', 
+                display: 'Insect', 
+                categories: ['animal', 'invertebrate']
+            },
+            octopus: { 
+                name: 'octopus', 
+                display: 'Octopus', 
+                categories: ['animal', 'invertebrate', 'marine', 'sentient', 'intelligent']
+            }
+        };
+
+        // ============================================
+        // FRAMING TEMPLATES
+        // ============================================
+        const framingTemplates = {
+            prevent: {
+                name: 'Prevent Harm',
+                question: 'Which outcome would you choose to prevent?',
+                formatA: (n, e) => `${n} ${e}${n > 1 ? 's' : ''} die${n === 1 ? 's' : ''}`,
+                formatB: (n, e) => `${n} ${e}${n > 1 ? 's' : ''} die${n === 1 ? 's' : ''}`
+            },
+            save: {
+                name: 'Save One Group',
+                question: 'You can only save one group. Which do you save?',
+                formatA: (n, e) => `Save ${n} ${e}${n > 1 ? 's' : ''}`,
+                formatB: (n, e) => `Save ${n} ${e}${n > 1 ? 's' : ''}`
+            },
+            kill_to_save: {
+                name: 'Active Trade-off',
+                question: 'Would you actively cause one harm to prevent the other?',
+                formatA: (n, e) => `Kill ${n} ${e}${n > 1 ? 's' : ''} to save others`,
+                formatB: (n, e) => `Let ${n} ${e}${n > 1 ? 's' : ''} die, cause no direct harm`
+            },
+            probability: {
+                name: 'Probability Trade-off',
+                question: 'Which probability would you accept?',
+                formatA: (n, e, p) => `${p || 100}% chance to save ${n} ${e}${n > 1 ? 's' : ''}`,
+                formatB: (n, e, p) => `${p || 50}% chance to save ${n} ${e}${n > 1 ? 's' : ''}`
+            },
+            testing: {
+                name: 'Testing Ethics',
+                question: 'A treatment requires testing. Which approach do you prefer?',
+                formatA: (n, e) => `Test on ${n} ${e}${n > 1 ? 's' : ''}, proceed faster`,
+                formatB: (n, e) => `Avoid ${e} testing, delay by years`
+            },
+            annual: {
+                name: 'Annual Trade-off',
+                question: 'Which ongoing situation would you choose?',
+                formatA: (n, e) => `${n} ${e}${n > 1 ? 's' : ''} saved per year`,
+                formatB: (n, e) => `${n} ${e}${n > 1 ? 's' : ''} saved per year`
+            }
+        };
+
+        // ============================================
+        // SCENARIO GENERATOR - COMPREHENSIVE
+        // ============================================
+        function generateScenarios() {
+            const scenarios = [];
+            let idCounter = 0;
+
+            function addScenario(entityA, numA, entityB, numB, framing, customQuestion = null) {
+                const entA = entities[entityA];
+                const entB = entities[entityB];
+                if (!entA || !entB) return;
+                
+                const frame = framingTemplates[framing];
+                
+                scenarios.push({
+                    id: `s${idCounter++}`,
+                    category: determineCategory(entA, entB),
+                    framing: framing,
+                    framingName: frame.name,
+                    question: customQuestion || frame.question,
+                    optionA: {
+                        text: frame.formatA(numA, entA.display),
+                        entity: entityA,
+                        num: numA,
+                        categories: entA.categories
+                    },
+                    optionB: {
+                        text: frame.formatB(numB, entB.display),
+                        entity: entityB,
+                        num: numB,
+                        categories: entB.categories
+                    }
+                });
+            }
+
+            function determineCategory(a, b) {
+                const aHuman = a.categories.includes('person');
+                const bHuman = b.categories.includes('person');
+                if (aHuman && bHuman) return 'human-comparison';
+                if (!aHuman && !bHuman) return 'animal-comparison';
+                return 'human-animal';
+            }
+
+            // ============================================
+            // HUMAN VS ANIMAL - Extensive comparisons
+            // ============================================
+            
+            // Generic human vs various animals at different ratios
+            const humanTypes = ['human', 'child', 'adult', 'elderly', 'parent', 'pregnant'];
+            const commonAnimals = ['dog', 'cat', 'pig', 'cow', 'chicken', 'mouse', 'chimpanzee', 'dolphin', 'elephant'];
+            
+            // Each human type vs each common animal at 1:1
+            humanTypes.forEach(h => {
+                commonAnimals.forEach(a => {
+                    addScenario(h, 1, a, 1, 'save');
+                });
+            });
+
+            // Human vs animals at various ratios
+            addScenario('human', 1, 'dog', 2, 'prevent');
+            addScenario('human', 1, 'dog', 5, 'prevent');
+            addScenario('human', 1, 'dog', 10, 'prevent');
+            addScenario('human', 1, 'dog', 50, 'prevent');
+            addScenario('human', 1, 'dog', 100, 'prevent');
+
+            addScenario('human', 1, 'pig', 2, 'prevent');
+            addScenario('human', 1, 'pig', 5, 'prevent');
+            addScenario('human', 1, 'pig', 10, 'prevent');
+            addScenario('human', 1, 'pig', 50, 'prevent');
+            addScenario('human', 1, 'pig', 100, 'prevent');
+
+            addScenario('human', 1, 'chicken', 10, 'prevent');
+            addScenario('human', 1, 'chicken', 100, 'prevent');
+            addScenario('human', 1, 'chicken', 1000, 'prevent');
+            addScenario('human', 1, 'chicken', 10000, 'prevent');
+
+            addScenario('human', 1, 'mouse', 10, 'prevent');
+            addScenario('human', 1, 'mouse', 100, 'prevent');
+            addScenario('human', 1, 'mouse', 1000, 'prevent');
+
+            addScenario('human', 1, 'fish', 100, 'prevent');
+            addScenario('human', 1, 'fish', 1000, 'prevent');
+            addScenario('human', 1, 'fish', 10000, 'prevent');
+
+            addScenario('human', 1, 'insect', 1000, 'prevent');
+            addScenario('human', 1, 'insect', 100000, 'prevent');
+
+            // Great apes - higher bar
+            addScenario('human', 1, 'chimpanzee', 1, 'save');
+            addScenario('human', 1, 'chimpanzee', 2, 'save');
+            addScenario('human', 1, 'chimpanzee', 5, 'save');
+            addScenario('human', 1, 'gorilla', 1, 'save');
+            addScenario('human', 1, 'gorilla', 3, 'save');
+
+            // Intelligent animals
+            addScenario('human', 1, 'dolphin', 1, 'save');
+            addScenario('human', 1, 'dolphin', 5, 'save');
+            addScenario('human', 1, 'elephant', 1, 'save');
+            addScenario('human', 1, 'elephant', 3, 'save');
+            addScenario('human', 1, 'octopus', 5, 'save');
+
+            // Child specifically
+            addScenario('child', 1, 'dog', 10, 'save');
+            addScenario('child', 1, 'dog', 50, 'save');
+            addScenario('child', 1, 'chimpanzee', 2, 'save');
+            addScenario('child', 1, 'elephant', 2, 'save');
+
+            // ============================================
+            // HUMAN VS HUMAN - Nationality comparisons
+            // ============================================
+            
+            const nationalities = ['american', 'british', 'palestinian', 'israeli', 'chinese', 'indian', 'nigerian', 'ukrainian', 'russian'];
+            
+            // Each nationality pair
+            for (let i = 0; i < nationalities.length; i++) {
+                for (let j = i + 1; j < nationalities.length; j++) {
+                    addScenario(nationalities[i], 1, nationalities[j], 1, 'save');
+                }
+            }
+
+            // Nationality vs generic human
+            nationalities.forEach(n => {
+                addScenario('human', 1, n, 1, 'save');
+            });
+
+            // Nationality at different numbers
+            addScenario('british', 1, 'palestinian', 1, 'save');
+            addScenario('british', 1, 'palestinian', 2, 'save');
+            addScenario('american', 1, 'chinese', 1, 'save');
+            addScenario('american', 1, 'nigerian', 1, 'save');
+            addScenario('ukrainian', 1, 'russian', 1, 'save');
+            addScenario('israeli', 1, 'palestinian', 1, 'save');
+
+            // Nationality vs animals (test if nationality affects human-animal tradeoff)
+            nationalities.forEach(n => {
+                addScenario(n, 1, 'dog', 10, 'prevent');
+                addScenario(n, 1, 'pig', 10, 'prevent');
+            });
+
+            // ============================================
+            // HUMAN VS HUMAN - Age/role comparisons
+            // ============================================
+            
+            addScenario('child', 1, 'adult', 1, 'save');
+            addScenario('child', 1, 'adult', 2, 'save');
+            addScenario('child', 1, 'elderly', 1, 'save');
+            addScenario('child', 1, 'elderly', 2, 'save');
+            addScenario('adult', 1, 'elderly', 1, 'save');
+            addScenario('adult', 1, 'elderly', 2, 'save');
+            addScenario('parent', 1, 'adult', 1, 'save');
+            addScenario('pregnant', 1, 'adult', 1, 'save');
+            addScenario('pregnant', 1, 'adult', 2, 'save');
+
+            // Numbers game with humans
+            addScenario('human', 1, 'human', 2, 'save');
+            addScenario('human', 1, 'human', 5, 'save');
+            addScenario('human', 1, 'human', 10, 'save');
+            addScenario('child', 1, 'adult', 5, 'save');
+
+            // ============================================
+            // ANIMAL VS ANIMAL - Cognitive hierarchy
+            // ============================================
+            
+            // Great apes vs other animals
+            addScenario('chimpanzee', 1, 'dog', 1, 'save');
+            addScenario('chimpanzee', 1, 'dog', 5, 'save');
+            addScenario('chimpanzee', 1, 'pig', 1, 'save');
+            addScenario('chimpanzee', 1, 'pig', 5, 'save');
+            addScenario('chimpanzee', 1, 'mouse', 10, 'save');
+            addScenario('chimpanzee', 1, 'mouse', 100, 'save');
+            addScenario('chimpanzee', 1, 'chicken', 50, 'save');
+            addScenario('gorilla', 1, 'dog', 5, 'save');
+
+            // Intelligent animals vs others
+            addScenario('dolphin', 1, 'dog', 1, 'save');
+            addScenario('dolphin', 1, 'pig', 1, 'save');
+            addScenario('dolphin', 1, 'fish', 100, 'save');
+            addScenario('elephant', 1, 'cow', 1, 'save');
+            addScenario('elephant', 1, 'cow', 5, 'save');
+            addScenario('elephant', 1, 'chicken', 100, 'save');
+            addScenario('octopus', 1, 'fish', 10, 'save');
+
+            // Pets vs farm animals
+            addScenario('dog', 1, 'pig', 1, 'save');
+            addScenario('dog', 1, 'pig', 2, 'save');
+            addScenario('dog', 1, 'pig', 5, 'save');
+            addScenario('dog', 1, 'cow', 1, 'save');
+            addScenario('dog', 1, 'chicken', 5, 'save');
+            addScenario('dog', 1, 'chicken', 20, 'save');
+            addScenario('cat', 1, 'pig', 1, 'save');
+            addScenario('cat', 1, 'chicken', 10, 'save');
+            addScenario('cat', 1, 'mouse', 5, 'save');
+
+            // Farm animals hierarchy
+            addScenario('pig', 1, 'cow', 1, 'save');
+            addScenario('pig', 1, 'sheep', 1, 'save');
+            addScenario('pig', 1, 'chicken', 5, 'save');
+            addScenario('pig', 1, 'chicken', 20, 'save');
+            addScenario('cow', 1, 'chicken', 10, 'save');
+            addScenario('cow', 1, 'sheep', 1, 'save');
+            addScenario('sheep', 1, 'chicken', 5, 'save');
+
+            // Lab animals
+            addScenario('monkey', 1, 'mouse', 10, 'save');
+            addScenario('monkey', 1, 'mouse', 50, 'save');
+            addScenario('monkey', 1, 'rat', 20, 'save');
+            addScenario('rabbit', 1, 'mouse', 10, 'save');
+            addScenario('rat', 1, 'mouse', 2, 'save');
+
+            // Small vs tiny
+            addScenario('mouse', 1, 'insect', 100, 'save');
+            addScenario('mouse', 1, 'insect', 1000, 'save');
+            addScenario('fish', 1, 'insect', 100, 'save');
+            addScenario('chicken', 1, 'fish', 10, 'save');
+
+            // ============================================
+            // TESTING ETHICS SCENARIOS
+            // ============================================
+            
+            addScenario('mouse', 100, 'human', 10, 'testing', 'A cancer treatment requires testing. Test on 100 mice with 80% chance of saving 10 human lives per year, or skip animal testing?');
+            addScenario('mouse', 1000, 'human', 100, 'testing', 'A vaccine needs testing. Test on 1000 mice to potentially save 100 humans, or delay development?');
+            addScenario('monkey', 10, 'human', 50, 'testing', 'A neurological treatment needs primate testing. Test on 10 monkeys to potentially help 50 humans per year?');
+            addScenario('monkey', 5, 'human', 10, 'testing', 'Test on 5 monkeys for 90% success rate, or use only computer models with 60% success rate?');
+            addScenario('rabbit', 50, 'human', 1, 'testing', 'Cosmetic safety testing: test on 50 rabbits, or release untested with small risk to humans?');
+            addScenario('chimpanzee', 2, 'human', 20, 'testing', 'Critical medical research requires great ape testing. Test on 2 chimpanzees to potentially save 20 humans?');
+            addScenario('mouse', 500, 'monkey', 5, 'testing', 'Which testing approach: 500 mice or 5 monkeys for equivalent results?');
+            addScenario('rat', 200, 'rabbit', 20, 'testing', 'Which testing approach: 200 rats or 20 rabbits?');
+
+            // ============================================
+            // ACTIVE HARM / KILL SCENARIOS
+            // ============================================
+            
+            addScenario('human', 1, 'human', 5, 'kill_to_save', 'Would you kill 1 person to save 5 others?');
+            addScenario('human', 1, 'human', 10, 'kill_to_save', 'Would you kill 1 person to save 10 others?');
+            addScenario('dog', 1, 'human', 1, 'kill_to_save', 'Would you kill 1 dog to save 1 human stranger?');
+            addScenario('dog', 1, 'human', 5, 'kill_to_save', 'Would you kill 1 dog to save 5 humans?');
+            addScenario('pig', 1, 'human', 1, 'kill_to_save', 'Would you kill 1 pig to save 1 human?');
+            addScenario('chimpanzee', 1, 'human', 1, 'kill_to_save', 'Would you kill 1 chimpanzee to save 1 human?');
+            addScenario('chimpanzee', 1, 'human', 5, 'kill_to_save', 'Would you kill 1 chimpanzee to save 5 humans?');
+            addScenario('mouse', 100, 'human', 1, 'kill_to_save', 'Would you kill 100 mice to save 1 human?');
+
+            // ============================================
+            // PROBABILITY SCENARIOS  
+            // ============================================
+            
+            scenarios.push({
+                id: `s${idCounter++}`,
+                category: 'probability',
+                framing: 'probability',
+                framingName: 'Probability Trade-off',
+                question: 'Which option would you choose?',
+                optionA: {
+                    text: '100% chance of saving 5 humans',
+                    entity: 'human',
+                    num: 5,
+                    categories: entities.human.categories
+                },
+                optionB: {
+                    text: '50% chance of saving 15 humans (50% saves none)',
+                    entity: 'human',
+                    num: 15,
+                    categories: entities.human.categories
+                }
+            });
+
+            scenarios.push({
+                id: `s${idCounter++}`,
+                category: 'probability',
+                framing: 'probability',
+                framingName: 'Probability Trade-off',
+                question: 'Which option would you choose?',
+                optionA: {
+                    text: '100% chance of saving 10 dogs',
+                    entity: 'dog',
+                    num: 10,
+                    categories: entities.dog.categories
+                },
+                optionB: {
+                    text: '30% chance of saving 50 dogs',
+                    entity: 'dog',
+                    num: 50,
+                    categories: entities.dog.categories
+                }
+            });
+
+            scenarios.push({
+                id: `s${idCounter++}`,
+                category: 'probability',
+                framing: 'probability',
+                framingName: 'Probability Trade-off',
+                question: 'A conservation programme has two options:',
+                optionA: {
+                    text: 'Definitely save 5 elephants',
+                    entity: 'elephant',
+                    num: 5,
+                    categories: entities.elephant.categories
+                },
+                optionB: {
+                    text: '25% chance of saving 50 elephants',
+                    entity: 'elephant',
+                    num: 50,
+                    categories: entities.elephant.categories
+                }
+            });
+
+            // Shuffle scenarios
+            return scenarios.sort(() => Math.random() - 0.5);
+        }
+
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        let state = {
+            sessionId: generateSessionId(),
+            sessionStart: new Date().toISOString(),
+            scenarios: [],
+            currentIndex: 0,
+            responses: {},
+            eloRatings: {},
+            started: false
+        };
+
+        function generateSessionId() {
+            return 'sess_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('moralWeightsState_v3');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state = { ...state, ...parsed };
+                if (!state.scenarios.length) {
+                    state.scenarios = generateScenarios();
+                }
+            } else {
+                state.scenarios = generateScenarios();
+            }
+            // Initialize Elo ratings for all entities
+            Object.keys(entities).forEach(e => {
+                if (!state.eloRatings[e]) {
+                    state.eloRatings[e] = { rating: 0, comparisons: 0, wins: 0, losses: 0 };
+                }
+            });
+        }
+
+        function saveState() {
+            localStorage.setItem('moralWeightsState_v3', JSON.stringify(state));
+        }
+
+        // ============================================
+        // ELO RATING SYSTEM
+        // ============================================
+        function calculateEloChange(winnerRating, loserRating, numWinner, numLoser) {
+            // K factor - how much ratings can change per comparison
+            const K = 32;
+            
+            // Expected score based on current ratings
+            const expectedWinner = 1 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
+            
+            // Adjust for numbers - if you chose 1 human over 100 mice, that's a stronger statement
+            // than choosing 1 human over 1 mouse
+            const numberRatio = Math.log10(Math.max(numLoser / numWinner, 1) + 1);
+            const adjustedK = K * (1 + numberRatio * 0.5);
+            
+            // Winner gets points, loser loses points
+            const change = adjustedK * (1 - expectedWinner);
+            
+            return change;
+        }
+
+        function updateEloRatings(winnerId, loserId, numWinner, numLoser) {
+            const winner = state.eloRatings[winnerId];
+            const loser = state.eloRatings[loserId];
+            
+            if (!winner || !loser) return;
+            
+            const change = calculateEloChange(winner.rating, loser.rating, numWinner, numLoser);
+            
+            winner.rating += change;
+            winner.comparisons++;
+            winner.wins++;
+            
+            loser.rating -= change;
+            loser.comparisons++;
+            loser.losses++;
+        }
+
+        // ============================================
+        // UI RENDERING
+        // ============================================
+        function renderScenario() {
+            const scenario = state.scenarios[state.currentIndex];
+            const container = document.getElementById('scenarioContainer');
+            const response = state.responses[scenario.id];
+            
+            container.innerHTML = `
+                <div class="scenario-card">
+                    <div class="scenario-meta">
+                        <span class="scenario-category">${formatCategory(scenario.category)}</span>
+                        <span class="scenario-framing">${scenario.framingName}</span>
+                        <span class="scenario-number">${state.currentIndex + 1} / ${state.scenarios.length}</span>
+                    </div>
+                    <p class="scenario-question">${scenario.question}</p>
+                    <div class="choices">
+                        <button class="choice-btn ${response === 'A' ? 'selected-a' : ''}" data-choice="A">
+                            <div class="choice-header">
+                                <span class="choice-label">Option A</span>
+                                <div class="choice-tags">
+                                    ${scenario.optionA.categories.slice(0, 3).map(c => `<span class="choice-tag">${c}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="choice-text">${scenario.optionA.text}</div>
+                        </button>
+                        <button class="choice-btn ${response === 'B' ? 'selected-b' : ''}" data-choice="B">
+                            <div class="choice-header">
+                                <span class="choice-label">Option B</span>
+                                <div class="choice-tags">
+                                    ${scenario.optionB.categories.slice(0, 3).map(c => `<span class="choice-tag">${c}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="choice-text">${scenario.optionB.text}</div>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const choice = btn.dataset.choice;
+                    
+                    // Determine winner/loser for Elo
+                    const winner = choice === 'A' ? scenario.optionA : scenario.optionB;
+                    const loser = choice === 'A' ? scenario.optionB : scenario.optionA;
+                    
+                    // Update Elo ratings
+                    updateEloRatings(winner.entity, loser.entity, winner.num, loser.num);
+                    
+                    state.responses[scenario.id] = choice;
+                    saveState();
+                    
+                    // Send to backend if available
+                    submitResponse(scenario.id, choice, scenario);
+                    
+                    // Brief visual feedback then auto-advance
+                    renderScenario();
+                    setTimeout(() => {
+                        if (state.currentIndex < state.scenarios.length - 1) {
+                            state.currentIndex++;
+                            renderScenario();
+                        } else {
+                            submitFullSession();
+                            document.querySelector('[data-tab="results"]').click();
+                        }
+                    }, 250);
+                });
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const answered = Object.keys(state.responses).length;
+            const total = state.scenarios.length;
+            const percent = Math.round((answered / total) * 100);
+            
+            document.getElementById('progressText').textContent = `Question ${state.currentIndex + 1} of ${total}`;
+            document.getElementById('progressPercent').textContent = `${percent}% complete`;
+            document.getElementById('progressFill').style.width = `${percent}%`;
+        }
+
+        function formatCategory(cat) {
+            const formats = {
+                'human-comparison': 'Human Comparison',
+                'animal-comparison': 'Animal Comparison',
+                'human-animal': 'Human vs Animal',
+                'testing-ethics': 'Testing Ethics',
+                'probability': 'Probability',
+                'active-harm': 'Active Harm'
+            };
+            return formats[cat] || cat;
+        }
+
+        // ============================================
+        // RESULTS DISPLAY
+        // ============================================
+        function updateResults() {
+            updateSessionInfo();
+            updateStats();
+            updateWeights();
+            updateCategoryWeights();
+            updateUntestedList();
+            updateResponseList();
+            updateInsights();
+            updateExportData();
+        }
+
+        function updateSessionInfo() {
+            document.getElementById('sessionId').textContent = state.sessionId;
+            document.getElementById('responseCount').textContent = Object.keys(state.responses).length;
+            document.getElementById('sessionStart').textContent = new Date(state.sessionStart).toLocaleString();
+        }
+
+        function updateStats() {
+            const answered = Object.keys(state.responses).length;
+            const total = state.scenarios.length;
+            const comparedEntities = Object.values(state.eloRatings).filter(e => e.comparisons > 0).length;
+            
+            document.getElementById('statAnswered').textContent = answered;
+            document.getElementById('statRemaining').textContent = total - answered;
+            document.getElementById('statEntities').textContent = comparedEntities;
+        }
+
+        function updateWeights() {
+            const container = document.getElementById('weightsContainer');
+            
+            // Get entities with at least 1 comparison
+            const compared = Object.entries(state.eloRatings)
+                .filter(([_, data]) => data.comparisons > 0)
+                .sort((a, b) => b[1].rating - a[1].rating);
+            
+            if (compared.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚖️</div>
+                        <p>Complete some scenarios to see your moral weights!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Find max absolute value for scaling
+            const maxAbs = Math.max(...compared.map(([_, d]) => Math.abs(d.rating)), 1);
+
+            container.innerHTML = compared.map(([entity, data]) => {
+                const rating = data.rating;
+                const isPositive = rating >= 0;
+                const barWidth = (Math.abs(rating) / maxAbs) * 50; // 50% max width each direction
+                const valueClass = rating > 0.5 ? 'positive' : (rating < -0.5 ? 'negative' : 'neutral');
+                
+                return `
+                    <div class="weight-item">
+                        <span class="weight-label">${entities[entity]?.display || entity}</span>
+                        <div class="weight-bar-container">
+                            <div class="weight-bar-zero"></div>
+                            <div class="weight-bar ${isPositive ? 'positive' : 'negative'}" 
+                                 style="width: ${barWidth}%;"></div>
+                        </div>
+                        <span class="weight-value ${valueClass}">${rating >= 0 ? '+' : ''}${rating.toFixed(1)}</span>
+                        <span class="weight-comparisons">(${data.comparisons})</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCategoryWeights() {
+            const container = document.getElementById('categoryWeights');
+            
+            // Aggregate by category
+            const categoryScores = {};
+            
+            Object.entries(state.eloRatings).forEach(([entity, data]) => {
+                if (data.comparisons === 0) return;
+                
+                const ent = entities[entity];
+                if (!ent) return;
+                
+                ent.categories.forEach(cat => {
+                    if (!categoryScores[cat]) {
+                        categoryScores[cat] = { total: 0, count: 0 };
+                    }
+                    categoryScores[cat].total += data.rating;
+                    categoryScores[cat].count++;
+                });
+            });
+
+            const sortedCats = Object.entries(categoryScores)
+                .map(([cat, data]) => ({ cat, avg: data.total / data.count, count: data.count }))
+                .sort((a, b) => b.avg - a.avg);
+
+            if (sortedCats.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Complete some scenarios to see category weights.</p></div>';
+                return;
+            }
+
+            const maxAbs = Math.max(...sortedCats.map(c => Math.abs(c.avg)), 1);
+
+            container.innerHTML = sortedCats.map(({ cat, avg, count }) => {
+                const isPositive = avg >= 0;
+                const barWidth = (Math.abs(avg) / maxAbs) * 50;
+                const valueClass = avg > 0.5 ? 'positive' : (avg < -0.5 ? 'negative' : 'neutral');
+                
+                return `
+                    <div class="weight-item">
+                        <span class="weight-label">${cat}</span>
+                        <div class="weight-bar-container">
+                            <div class="weight-bar-zero"></div>
+                            <div class="weight-bar ${isPositive ? 'positive' : 'negative'}" 
+                                 style="width: ${barWidth}%;"></div>
+                        </div>
+                        <span class="weight-value ${valueClass}">${avg >= 0 ? '+' : ''}${avg.toFixed(1)}</span>
+                        <span class="weight-comparisons">(${count})</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateUntestedList() {
+            const container = document.getElementById('untestedList');
+            const untested = Object.entries(state.eloRatings)
+                .filter(([_, data]) => data.comparisons === 0)
+                .map(([entity]) => entity);
+            
+            if (untested.length === 0) {
+                container.innerHTML = '<span class="untested-item" style="background: var(--selection-a); border-color: var(--selection-a-border); color: var(--selection-a-border);">All entities have been compared!</span>';
+                return;
+            }
+            
+            container.innerHTML = untested.map(e => 
+                `<span class="untested-item">${entities[e]?.display || e}</span>`
+            ).join('');
+        }
+
+        function updateResponseList() {
+            const container = document.getElementById('responseList');
+            const responses = Object.entries(state.responses);
+            
+            if (responses.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No responses recorded yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show last 20 responses in reverse order
+            const recentResponses = responses.slice(-20).reverse();
+            
+            container.innerHTML = recentResponses.map(([id, choice]) => {
+                const scenario = state.scenarios.find(s => s.id === id);
+                if (!scenario) return '';
+                
+                const chosen = choice === 'A' ? scenario.optionA : scenario.optionB;
+                const rejected = choice === 'A' ? scenario.optionB : scenario.optionA;
+                
+                return `
+                    <div class="response-item">
+                        <span class="response-question">
+                            Chose <strong>${chosen.text}</strong> over ${rejected.text}
+                        </span>
+                        <span class="response-badge choice-${choice.toLowerCase()}">
+                            ${choice === 'A' ? 'A' : 'B'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+            
+            if (responses.length > 20) {
+                container.innerHTML += `<p style="text-align: center; color: var(--text-muted); margin-top: 1rem;">Showing last 20 of ${responses.length} responses</p>`;
+            }
+        }
+
+        function updateInsights() {
+            const box = document.getElementById('insightsBox');
+            const content = document.getElementById('insightsContent');
+            const responses = Object.entries(state.responses);
+            
+            if (responses.length < 10) {
+                box.style.display = 'none';
+                return;
+            }
+            
+            const insights = [];
+            const ratings = state.eloRatings;
+            
+            // Human vs Animal gap
+            const humanEntities = Object.entries(ratings).filter(([e, d]) => 
+                d.comparisons > 0 && entities[e]?.categories.includes('person')
+            );
+            const animalEntities = Object.entries(ratings).filter(([e, d]) => 
+                d.comparisons > 0 && entities[e]?.categories.includes('animal')
+            );
+            
+            if (humanEntities.length > 0 && animalEntities.length > 0) {
+                const avgHuman = humanEntities.reduce((s, [_, d]) => s + d.rating, 0) / humanEntities.length;
+                const avgAnimal = animalEntities.reduce((s, [_, d]) => s + d.rating, 0) / animalEntities.length;
+                const gap = avgHuman - avgAnimal;
+                
+                if (gap > 20) {
+                    insights.push(`Strong human preference: Human entities average ${gap.toFixed(0)} points higher than animals.`);
+                } else if (gap > 10) {
+                    insights.push(`Moderate human preference: Human entities average ${gap.toFixed(0)} points higher than animals.`);
+                } else if (gap < 5) {
+                    insights.push(`Relatively equal weighting: Only ${gap.toFixed(0)} point gap between humans and animals on average.`);
+                }
+            }
+            
+            // Pet vs farm animal
+            const pets = ['dog', 'cat'].filter(e => ratings[e]?.comparisons > 0);
+            const farm = ['pig', 'cow', 'chicken'].filter(e => ratings[e]?.comparisons > 0);
+            
+            if (pets.length > 0 && farm.length > 0) {
+                const avgPet = pets.reduce((s, e) => s + ratings[e].rating, 0) / pets.length;
+                const avgFarm = farm.reduce((s, e) => s + ratings[e].rating, 0) / farm.length;
+                
+                if (avgPet > avgFarm + 10) {
+                    insights.push(`Pet bias detected: Companion animals rated ${(avgPet - avgFarm).toFixed(0)} points higher than farm animals of similar intelligence.`);
+                }
+            }
+            
+            // Nationality check
+            const nationalities = ['american', 'british', 'palestinian', 'israeli', 'chinese', 'indian', 'nigerian', 'ukrainian', 'russian']
+                .filter(e => ratings[e]?.comparisons > 0);
+            
+            if (nationalities.length > 2) {
+                const natRatings = nationalities.map(e => ({ e, r: ratings[e].rating })).sort((a, b) => b.r - a.r);
+                const range = natRatings[0].r - natRatings[natRatings.length - 1].r;
+                
+                if (range < 5) {
+                    insights.push(`Consistent humanitarian values: Less than ${range.toFixed(0)} point spread across nationalities tested.`);
+                } else if (range > 15) {
+                    insights.push(`Nationality-based variation: ${range.toFixed(0)} point spread between highest (${entities[natRatings[0].e]?.display}) and lowest (${entities[natRatings[natRatings.length - 1].e]?.display}) rated nationalities.`);
+                }
+            }
+            
+            // Great apes
+            const greatApes = ['chimpanzee', 'gorilla', 'orangutan'].filter(e => ratings[e]?.comparisons > 0);
+            if (greatApes.length > 0) {
+                const avgApe = greatApes.reduce((s, e) => s + ratings[e].rating, 0) / greatApes.length;
+                const avgOtherAnimal = animalEntities
+                    .filter(([e]) => !greatApes.includes(e))
+                    .reduce((s, [_, d]) => s + d.rating, 0) / Math.max(animalEntities.length - greatApes.length, 1);
+                
+                if (avgApe > avgOtherAnimal + 15) {
+                    insights.push(`Great ape recognition: Apes rated ${(avgApe - avgOtherAnimal).toFixed(0)} points higher than other animals.`);
+                }
+            }
+            
+            insights.push(`Analysis based on ${responses.length} responses comparing ${Object.values(ratings).filter(r => r.comparisons > 0).length} entities.`);
+            
+            box.style.display = 'block';
+            content.innerHTML = insights.map(i => `<div class="insight-item">${i}</div>`).join('');
+        }
+
+        function updateExportData() {
+            const exportData = {
+                sessionId: state.sessionId,
+                sessionStart: state.sessionStart,
+                exportTime: new Date().toISOString(),
+                totalScenarios: state.scenarios.length,
+                responsesCount: Object.keys(state.responses).length,
+                eloRatings: state.eloRatings,
+                responses: Object.entries(state.responses).map(([id, choice]) => {
+                    const scenario = state.scenarios.find(s => s.id === id);
+                    return {
+                        scenarioId: id,
+                        choice,
+                        scenario: scenario ? {
+                            category: scenario.category,
+                            framing: scenario.framing,
+                            question: scenario.question,
+                            optionA: scenario.optionA,
+                            optionB: scenario.optionB
+                        } : null
+                    };
+                })
+            };
+            
+            document.getElementById('exportData').value = JSON.stringify(exportData, null, 2);
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                
+                if (tab.dataset.tab === 'results') {
+                    updateResults();
+                }
+            });
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            state.started = true;
+            saveState();
+            document.getElementById('introSection').style.display = 'none';
+            document.getElementById('scenarioSection').style.display = 'block';
+            renderScenario();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all responses? This cannot be undone.')) {
+                state.responses = {};
+                state.currentIndex = 0;
+                state.sessionId = generateSessionId();
+                state.sessionStart = new Date().toISOString();
+                // Reset all Elo ratings
+                Object.keys(state.eloRatings).forEach(e => {
+                    state.eloRatings[e] = { rating: 0, comparisons: 0, wins: 0, losses: 0 };
+                });
+                saveState();
+                updateResults();
+            }
+        });
+
+        document.getElementById('copyDataBtn').addEventListener('click', () => {
+            const textarea = document.getElementById('exportData');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Data copied to clipboard!');
+        });
+
+        document.getElementById('downloadDataBtn').addEventListener('click', () => {
+            const data = document.getElementById('exportData').value;
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `moral-weights-${state.sessionId}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // ============================================
+        // SUPABASE API SUBMISSION
+        // ============================================
+        const SUPABASE_URL = 'https://nxmdvyngyrkqykbsligr.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_OVcVdS_I6F0ODbP6b1IzrQ_xe9vx6fJ';
+        
+        async function submitResponse(scenarioId, choice, scenario) {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/responses`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        session_id: state.sessionId,
+                        scenario_id: scenarioId,
+                        choice: choice,
+                        scenario: {
+                            category: scenario.category,
+                            framing: scenario.framing,
+                            question: scenario.question,
+                            optionA: scenario.optionA,
+                            optionB: scenario.optionB
+                        },
+                        elo_ratings: state.eloRatings,
+                        user_agent: navigator.userAgent
+                    })
+                });
+            } catch (e) {
+                console.log('Supabase submission failed, data saved locally');
+            }
+        }
+        
+        async function submitFullSession() {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/sessions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        session_id: state.sessionId,
+                        session_start: state.sessionStart,
+                        completed_at: new Date().toISOString(),
+                        total_responses: Object.keys(state.responses).length,
+                        elo_ratings: state.eloRatings,
+                        responses: Object.entries(state.responses).map(([id, choice]) => {
+                            const scenario = state.scenarios.find(s => s.id === id);
+                            return {
+                                scenarioId: id,
+                                choice,
+                                scenario: scenario ? {
+                                    category: scenario.category,
+                                    framing: scenario.framing,
+                                    optionA: scenario.optionA,
+                                    optionB: scenario.optionB
+                                } : null
+                            };
+                        }),
+                        user_agent: navigator.userAgent
+                    })
+                });
+            } catch (e) {
+                console.log('Supabase session submission failed, data saved locally');
+            }
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        loadState();
+        
+        if (state.started) {
+            document.getElementById('introSection').style.display = 'none';
+            document.getElementById('scenarioSection').style.display = 'block';
+            renderScenario();
+        }
+    </script>
+</body>
+</html>
