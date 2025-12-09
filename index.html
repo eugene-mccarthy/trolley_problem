@@ -5,7 +5,619 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moral Weights Explorer</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-primary: #58a6ff;
+            --accent-secondary: #3fb950;
+            --accent-warm: #d29922;
+            --border-default: #30363d;
+            --border-muted: #21262d;
+            --selection-a: #2d4a3e;
+            --selection-a-border: #3fb950;
+            --selection-b: #2d3a4a;
+            --selection-b-border: #58a6ff;
+            --negative: #f85149;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        h1 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .scenario-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .scenario-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .scenario-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent-warm);
+            background: rgba(210, 153, 34, 0.1);
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+        }
+
+        .scenario-framing {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+        }
+
+        .scenario-number {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .scenario-question {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.4rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .choices {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .choice-btn {
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-default);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            color: var(--text-primary);
+        }
+
+        .choice-btn:hover {
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        .choice-btn.selected-a {
+            background: var(--selection-a);
+            border-color: var(--selection-a-border);
+        }
+
+        .choice-btn.selected-b {
+            background: var(--selection-b);
+            border-color: var(--selection-b-border);
+        }
+
+        .choice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .choice-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .choice-tags {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+
+        .choice-tag {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            color: var(--text-muted);
+        }
+
+        .choice-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .results-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-section h2 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .weight-category {
+            margin-bottom: 2rem;
+        }
+
+        .weight-category-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-muted);
+        }
+
+        .weight-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 0;
+            gap: 1rem;
+        }
+
+        .weight-label {
+            min-width: 140px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .weight-bar-container {
+            flex: 1;
+            height: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: visible;
+            position: relative;
+        }
+
+        .weight-bar-zero {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--text-muted);
+            z-index: 1;
+        }
+
+        .weight-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 6px;
+            transition: all 0.5s ease;
+        }
+
+        .weight-bar.positive {
+            left: 50%;
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+        }
+
+        .weight-bar.negative {
+            right: 50%;
+            background: linear-gradient(90deg, var(--negative), #ff8c82);
+        }
+
+        .weight-value {
+            min-width: 70px;
+            text-align: right;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .weight-value.positive {
+            color: var(--accent-secondary);
+        }
+
+        .weight-value.negative {
+            color: var(--negative);
+        }
+
+        .weight-value.neutral {
+            color: var(--text-muted);
+        }
+
+        .weight-comparisons {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            min-width: 40px;
+        }
+
+        .untested-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .untested-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .untested-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .untested-item {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--text-muted);
+        }
+
+        .response-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            gap: 1rem;
+        }
+
+        .response-question {
+            flex: 1;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .response-question strong {
+            color: var(--text-primary);
+        }
+
+        .response-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .response-badge.choice-a {
+            background: var(--selection-a);
+            color: var(--selection-a-border);
+        }
+
+        .response-badge.choice-b {
+            background: var(--selection-b);
+            color: var(--selection-b-border);
+        }
+
+        .insights-box {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(63, 185, 80, 0.1));
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .insights-box h3 {
+            color: var(--accent-primary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .insight-item {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            padding-left: 1rem;
+            border-left: 2px solid var(--accent-secondary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--bg-secondary);
+            border-color: var(--text-muted);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #79b8ff;
+            border-color: #79b8ff;
+        }
+
+        .btn-danger {
+            background: rgba(248, 81, 73, 0.1);
+            border-color: #f85149;
+            color: #f85149;
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 81, 73, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .intro-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .intro-card h2 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .intro-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .intro-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        .start-btn {
+            margin-top: 1.5rem;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .session-info {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .session-info code {
+            background: var(--bg-primary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .comparison-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .export-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .export-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .export-textarea {
+            width: 100%;
+            height: 150px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 0.8rem;
+            padding: 1rem;
+            resize: vertical;
+        }
+
+        .methodology-note {
+            background: rgba(88, 166, 255, 0.05);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .methodology-note strong {
+            color: var(--accent-primary);
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -133,10 +745,1475 @@
         </div>
     </div>
 
-    <!-- Scripts (order matters!) -->
-    <script src="js/config.js"></script>
-    <script src="js/scenarios.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        // ============================================
+        // ENTITY DEFINITIONS WITH CATEGORIES
+        // ============================================
+        const entities = {
+            // Humans - General
+            human: { 
+                name: 'human', 
+                display: 'human',
+                displayPlural: 'humans',
+                categories: ['person', 'human', 'sentient'],
+                isHuman: true
+            },
+            child: { 
+                name: 'child', 
+                display: 'child',
+                displayPlural: 'children',
+                categories: ['person', 'human', 'sentient', 'vulnerable', 'young'],
+                isHuman: true
+            },
+            adult: { 
+                name: 'adult', 
+                display: 'adult',
+                displayPlural: 'adults',
+                categories: ['person', 'human', 'sentient'],
+                isHuman: true
+            },
+            elderly: { 
+                name: 'elderly', 
+                display: 'elderly person',
+                displayPlural: 'elderly people',
+                categories: ['person', 'human', 'sentient', 'vulnerable'],
+                isHuman: true
+            },
+            parent: { 
+                name: 'parent', 
+                display: 'parent',
+                displayPlural: 'parents',
+                categories: ['person', 'human', 'sentient', 'caregiver'],
+                isHuman: true
+            },
+            pregnant: { 
+                name: 'pregnant', 
+                display: 'pregnant person',
+                displayPlural: 'pregnant people',
+                categories: ['person', 'human', 'sentient', 'vulnerable'],
+                isHuman: true
+            },
+            // Humans - Nationalities/Groups
+            american: { 
+                name: 'american', 
+                display: 'American',
+                displayPlural: 'Americans',
+                categories: ['person', 'human', 'sentient', 'nationality', 'western'],
+                isHuman: true,
+                isNationality: true
+            },
+            british: { 
+                name: 'british', 
+                display: 'British person',
+                displayPlural: 'British people',
+                categories: ['person', 'human', 'sentient', 'nationality', 'western'],
+                isHuman: true,
+                isNationality: true
+            },
+            palestinian: { 
+                name: 'palestinian', 
+                display: 'Palestinian',
+                displayPlural: 'Palestinians',
+                categories: ['person', 'human', 'sentient', 'nationality', 'middle-eastern'],
+                isHuman: true,
+                isNationality: true
+            },
+            israeli: { 
+                name: 'israeli', 
+                display: 'Israeli',
+                displayPlural: 'Israelis',
+                categories: ['person', 'human', 'sentient', 'nationality', 'middle-eastern'],
+                isHuman: true,
+                isNationality: true
+            },
+            chinese: { 
+                name: 'chinese', 
+                display: 'Chinese person',
+                displayPlural: 'Chinese people',
+                categories: ['person', 'human', 'sentient', 'nationality', 'asian'],
+                isHuman: true,
+                isNationality: true
+            },
+            indian: { 
+                name: 'indian', 
+                display: 'Indian person',
+                displayPlural: 'Indian people',
+                categories: ['person', 'human', 'sentient', 'nationality', 'asian'],
+                isHuman: true,
+                isNationality: true
+            },
+            nigerian: { 
+                name: 'nigerian', 
+                display: 'Nigerian',
+                displayPlural: 'Nigerians',
+                categories: ['person', 'human', 'sentient', 'nationality', 'african'],
+                isHuman: true,
+                isNationality: true
+            },
+            ukrainian: { 
+                name: 'ukrainian', 
+                display: 'Ukrainian',
+                displayPlural: 'Ukrainians',
+                categories: ['person', 'human', 'sentient', 'nationality', 'european'],
+                isHuman: true,
+                isNationality: true
+            },
+            russian: { 
+                name: 'russian', 
+                display: 'Russian',
+                displayPlural: 'Russians',
+                categories: ['person', 'human', 'sentient', 'nationality', 'european'],
+                isHuman: true,
+                isNationality: true
+            },
+            syrian: { 
+                name: 'syrian', 
+                display: 'Syrian',
+                displayPlural: 'Syrians',
+                categories: ['person', 'human', 'sentient', 'nationality', 'middle-eastern'],
+                isHuman: true,
+                isNationality: true
+            },
+            mexican: { 
+                name: 'mexican', 
+                display: 'Mexican',
+                displayPlural: 'Mexicans',
+                categories: ['person', 'human', 'sentient', 'nationality', 'latin-american'],
+                isHuman: true,
+                isNationality: true
+            },
+            // Animals - Great Apes
+            chimpanzee: { 
+                name: 'chimpanzee', 
+                display: 'chimpanzee',
+                displayPlural: 'chimpanzees',
+                categories: ['animal', 'mammal', 'primate', 'great-ape', 'sentient', 'wild', 'intelligent'],
+                isHuman: false
+            },
+            gorilla: { 
+                name: 'gorilla', 
+                display: 'gorilla',
+                displayPlural: 'gorillas',
+                categories: ['animal', 'mammal', 'primate', 'great-ape', 'sentient', 'wild', 'intelligent'],
+                isHuman: false
+            },
+            orangutan: { 
+                name: 'orangutan', 
+                display: 'orangutan',
+                displayPlural: 'orangutans',
+                categories: ['animal', 'mammal', 'primate', 'great-ape', 'sentient', 'wild', 'intelligent'],
+                isHuman: false
+            },
+            // Animals - Other Primates
+            monkey: { 
+                name: 'monkey', 
+                display: 'monkey',
+                displayPlural: 'monkeys',
+                categories: ['animal', 'mammal', 'primate', 'sentient', 'lab-animal'],
+                isHuman: false
+            },
+            // Animals - Marine Mammals
+            dolphin: { 
+                name: 'dolphin', 
+                display: 'dolphin',
+                displayPlural: 'dolphins',
+                categories: ['animal', 'mammal', 'marine', 'sentient', 'wild', 'intelligent'],
+                isHuman: false
+            },
+            whale: { 
+                name: 'whale', 
+                display: 'whale',
+                displayPlural: 'whales',
+                categories: ['animal', 'mammal', 'marine', 'sentient', 'wild', 'intelligent'],
+                isHuman: false
+            },
+            // Animals - Large Land Mammals
+            elephant: { 
+                name: 'elephant', 
+                display: 'elephant',
+                displayPlural: 'elephants',
+                categories: ['animal', 'mammal', 'sentient', 'wild', 'intelligent'],
+                isHuman: false
+            },
+            // Animals - Pets
+            dog: { 
+                name: 'dog', 
+                display: 'dog',
+                displayPlural: 'dogs',
+                categories: ['animal', 'mammal', 'pet', 'sentient', 'domestic', 'companion'],
+                isHuman: false
+            },
+            cat: { 
+                name: 'cat', 
+                display: 'cat',
+                displayPlural: 'cats',
+                categories: ['animal', 'mammal', 'pet', 'sentient', 'domestic', 'companion'],
+                isHuman: false
+            },
+            // Animals - Farm Animals
+            pig: { 
+                name: 'pig', 
+                display: 'pig',
+                displayPlural: 'pigs',
+                categories: ['animal', 'mammal', 'farm', 'sentient', 'livestock', 'intelligent'],
+                isHuman: false
+            },
+            cow: { 
+                name: 'cow', 
+                display: 'cow',
+                displayPlural: 'cows',
+                categories: ['animal', 'mammal', 'farm', 'sentient', 'livestock'],
+                isHuman: false
+            },
+            sheep: { 
+                name: 'sheep', 
+                display: 'sheep',
+                displayPlural: 'sheep',
+                categories: ['animal', 'mammal', 'farm', 'sentient', 'livestock'],
+                isHuman: false
+            },
+            chicken: { 
+                name: 'chicken', 
+                display: 'chicken',
+                displayPlural: 'chickens',
+                categories: ['animal', 'bird', 'farm', 'sentient', 'livestock'],
+                isHuman: false
+            },
+            // Animals - Lab Animals
+            mouse: { 
+                name: 'mouse', 
+                display: 'mouse',
+                displayPlural: 'mice',
+                categories: ['animal', 'mammal', 'rodent', 'sentient', 'lab-animal'],
+                isHuman: false
+            },
+            rat: { 
+                name: 'rat', 
+                display: 'rat',
+                displayPlural: 'rats',
+                categories: ['animal', 'mammal', 'rodent', 'sentient', 'lab-animal'],
+                isHuman: false
+            },
+            rabbit: { 
+                name: 'rabbit', 
+                display: 'rabbit',
+                displayPlural: 'rabbits',
+                categories: ['animal', 'mammal', 'sentient', 'lab-animal', 'pet'],
+                isHuman: false
+            },
+            // Animals - Other
+            fish: { 
+                name: 'fish', 
+                display: 'fish',
+                displayPlural: 'fish',
+                categories: ['animal', 'aquatic', 'vertebrate'],
+                isHuman: false
+            },
+            insect: { 
+                name: 'insect', 
+                display: 'insect',
+                displayPlural: 'insects',
+                categories: ['animal', 'invertebrate'],
+                isHuman: false
+            },
+            octopus: { 
+                name: 'octopus', 
+                display: 'octopus',
+                displayPlural: 'octopuses',
+                categories: ['animal', 'invertebrate', 'marine', 'sentient', 'intelligent'],
+                isHuman: false
+            },
+            horse: { 
+                name: 'horse', 
+                display: 'horse',
+                displayPlural: 'horses',
+                categories: ['animal', 'mammal', 'domestic', 'sentient', 'companion'],
+                isHuman: false
+            },
+            deer: { 
+                name: 'deer', 
+                display: 'deer',
+                displayPlural: 'deer',
+                categories: ['animal', 'mammal', 'wild', 'sentient'],
+                isHuman: false
+            },
+            bear: { 
+                name: 'bear', 
+                display: 'bear',
+                displayPlural: 'bears',
+                categories: ['animal', 'mammal', 'wild', 'sentient', 'intelligent'],
+                isHuman: false
+            },
+            wolf: { 
+                name: 'wolf', 
+                display: 'wolf',
+                displayPlural: 'wolves',
+                categories: ['animal', 'mammal', 'wild', 'sentient', 'intelligent'],
+                isHuman: false
+            }
+        };
+
+        // Helper functions
+        function getDisplay(entity, num) {
+            const e = entities[entity];
+            if (!e) return entity;
+            return num === 1 ? e.display : e.displayPlural;
+        }
+
+        function pickRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function pickRandomNumber(options) {
+            return pickRandom(options);
+        }
+
+        // Get entity lists
+        const humanEntities = Object.keys(entities).filter(e => entities[e].isHuman && !entities[e].isNationality);
+        const nationalityEntities = Object.keys(entities).filter(e => entities[e].isNationality);
+        const animalEntities = Object.keys(entities).filter(e => !entities[e].isHuman);
+        const allHumans = Object.keys(entities).filter(e => entities[e].isHuman);
+
+        // ============================================
+        // SCENARIO GENERATORS
+        // ============================================
+        
+        const scenarioGenerators = [
+            // Basic: Which would you prevent?
+            function basicPrevent() {
+                const useNationality = Math.random() < 0.3;
+                let entityA, entityB;
+                
+                if (useNationality) {
+                    // Nationality vs animal only
+                    entityA = pickRandom(nationalityEntities);
+                    entityB = pickRandom(animalEntities);
+                } else if (Math.random() < 0.5) {
+                    // Human vs animal
+                    entityA = pickRandom(humanEntities);
+                    entityB = pickRandom(animalEntities);
+                } else {
+                    // Animal vs animal
+                    entityA = pickRandom(animalEntities);
+                    entityB = pickRandom(animalEntities.filter(e => e !== entityA));
+                }
+                
+                const numA = pickRandomNumber([1, 1, 1, 2, 5]);
+                const numB = pickRandomNumber([1, 2, 5, 10, 20, 50, 100]);
+                
+                return {
+                    category: entities[entityA].isHuman ? 'human-animal' : 'animal-comparison',
+                    framing: 'Prevent Harm',
+                    question: 'Which outcome would you choose to prevent?',
+                    optionA: {
+                        text: `${numA} ${getDisplay(entityA, numA)} ${numA === 1 ? 'dies' : 'die'}`,
+                        entity: entityA,
+                        num: numA,
+                        categories: entities[entityA].categories
+                    },
+                    optionB: {
+                        text: `${numB} ${getDisplay(entityB, numB)} ${numB === 1 ? 'dies' : 'die'}`,
+                        entity: entityB,
+                        num: numB,
+                        categories: entities[entityB].categories
+                    }
+                };
+            },
+
+            // Save one group
+            function saveOne() {
+                const useNationality = Math.random() < 0.3;
+                let entityA, entityB;
+                
+                if (useNationality) {
+                    entityA = pickRandom(nationalityEntities);
+                    entityB = pickRandom(animalEntities);
+                } else if (Math.random() < 0.5) {
+                    entityA = pickRandom(humanEntities);
+                    entityB = pickRandom(animalEntities);
+                } else {
+                    entityA = pickRandom(animalEntities);
+                    entityB = pickRandom(animalEntities.filter(e => e !== entityA));
+                }
+                
+                const numA = pickRandomNumber([1, 1, 2, 3]);
+                const numB = pickRandomNumber([1, 2, 5, 10, 20]);
+                
+                return {
+                    category: entities[entityA].isHuman ? 'human-animal' : 'animal-comparison',
+                    framing: 'Save One Group',
+                    question: 'You can only save one group. Which do you save?',
+                    optionA: {
+                        text: `Save ${numA} ${getDisplay(entityA, numA)}`,
+                        entity: entityA,
+                        num: numA,
+                        categories: entities[entityA].categories
+                    },
+                    optionB: {
+                        text: `Save ${numB} ${getDisplay(entityB, numB)}`,
+                        entity: entityB,
+                        num: numB,
+                        categories: entities[entityB].categories
+                    }
+                };
+            },
+
+            // Medical research with probability
+            function medicalResearch() {
+                const humanType = pickRandom(allHumans);
+                const animal = pickRandom(['mouse', 'rat', 'rabbit', 'monkey', 'pig', 'dog']);
+                const animalNum = pickRandomNumber([10, 50, 100, 500, 1000, 5000]);
+                const humansSaved = pickRandomNumber([100, 500, 1000, 5000, 10000, 50000]);
+                const probability = pickRandomNumber([5, 10, 15, 20, 30, 50]);
+                const condition = pickRandom(['cancer', 'heart disease', 'Alzheimer\'s', 'diabetes', 'a rare genetic disorder', 'malaria', 'HIV/AIDS']);
+                
+                return {
+                    category: 'medical-research',
+                    framing: 'Research Ethics',
+                    question: `A potential treatment for ${condition} could save ${humansSaved.toLocaleString()} ${getDisplay(humanType, humansSaved)} per year. The research has a ${probability}% chance of success but requires testing on ${animalNum.toLocaleString()} ${getDisplay(animal, animalNum)}. Should the research proceed?`,
+                    optionA: {
+                        text: `Yes, conduct the research (kill ${animalNum.toLocaleString()} ${getDisplay(animal, animalNum)})`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    },
+                    optionB: {
+                        text: `No, do not conduct the research (${humansSaved.toLocaleString()} ${getDisplay(humanType, humansSaved)} remain at risk)`,
+                        entity: humanType,
+                        num: humansSaved,
+                        categories: entities[humanType].categories
+                    }
+                };
+            },
+
+            // Organ transplant - deceased donor
+            function organTransplantDeceased() {
+                const donor = pickRandom(animalEntities);
+                const recipient = pickRandom(allHumans);
+                const recipientNum = pickRandomNumber([1, 1, 1, 2, 3]);
+                
+                return {
+                    category: 'organ-transplant',
+                    framing: 'Transplant Ethics',
+                    question: `A ${getDisplay(donor, 1)} has died of natural causes. Its organs could be transplanted to save ${recipientNum} ${getDisplay(recipient, recipientNum)}. Is this acceptable?`,
+                    optionA: {
+                        text: `Yes, use the organs to save ${recipientNum} ${getDisplay(recipient, recipientNum)}`,
+                        entity: recipient,
+                        num: recipientNum,
+                        categories: entities[recipient].categories
+                    },
+                    optionB: {
+                        text: `No, do not use the organs`,
+                        entity: donor,
+                        num: 1,
+                        categories: entities[donor].categories
+                    }
+                };
+            },
+
+            // Organ transplant - kill for organs
+            function organTransplantKill() {
+                const donor = pickRandom(animalEntities);
+                const recipient = pickRandom(allHumans);
+                const recipientNum = pickRandomNumber([1, 1, 2, 3, 5]);
+                
+                return {
+                    category: 'organ-transplant',
+                    framing: 'Transplant Ethics',
+                    question: `${recipientNum} ${getDisplay(recipient, recipientNum)} will die without organ transplants. A healthy ${getDisplay(donor, 1)} could provide the necessary organs. Is it acceptable to kill the ${getDisplay(donor, 1)} to save them?`,
+                    optionA: {
+                        text: `Yes, kill the ${getDisplay(donor, 1)} to save ${recipientNum} ${getDisplay(recipient, recipientNum)}`,
+                        entity: recipient,
+                        num: recipientNum,
+                        categories: entities[recipient].categories
+                    },
+                    optionB: {
+                        text: `No, do not kill the ${getDisplay(donor, 1)}`,
+                        entity: donor,
+                        num: 1,
+                        categories: entities[donor].categories
+                    }
+                };
+            },
+
+            // Kill to save (trolley problem style)
+            function killToSave() {
+                const useNationality = Math.random() < 0.25;
+                let victim, saved;
+                
+                if (useNationality) {
+                    victim = pickRandom(animalEntities);
+                    saved = pickRandom(nationalityEntities);
+                } else if (Math.random() < 0.6) {
+                    victim = pickRandom(animalEntities);
+                    saved = pickRandom(humanEntities);
+                } else {
+                    victim = pickRandom(animalEntities);
+                    saved = pickRandom(animalEntities.filter(e => e !== victim));
+                }
+                
+                const victimNum = pickRandomNumber([1, 1, 1, 2, 5]);
+                const savedNum = pickRandomNumber([1, 2, 5, 10, 20]);
+                
+                return {
+                    category: 'active-harm',
+                    framing: 'Active Trade-off',
+                    question: `Would you actively kill ${victimNum} ${getDisplay(victim, victimNum)} to save ${savedNum} ${getDisplay(saved, savedNum)}?`,
+                    optionA: {
+                        text: `Yes, kill ${victimNum} ${getDisplay(victim, victimNum)} to save ${savedNum} ${getDisplay(saved, savedNum)}`,
+                        entity: saved,
+                        num: savedNum,
+                        categories: entities[saved].categories
+                    },
+                    optionB: {
+                        text: `No, do not kill (${savedNum} ${getDisplay(saved, savedNum)} die)`,
+                        entity: victim,
+                        num: victimNum,
+                        categories: entities[victim].categories
+                    }
+                };
+            },
+
+            // Probability trade-off
+            function probabilityTradeoff() {
+                const entity = pickRandom([...humanEntities, ...animalEntities]);
+                const certainNum = pickRandomNumber([1, 2, 5, 10]);
+                const riskyNum = certainNum * pickRandomNumber([3, 4, 5, 10]);
+                const probability = pickRandomNumber([20, 25, 30, 40, 50]);
+                
+                return {
+                    category: 'probability',
+                    framing: 'Probability Trade-off',
+                    question: 'Which option would you choose?',
+                    optionA: {
+                        text: `100% chance of saving ${certainNum} ${getDisplay(entity, certainNum)}`,
+                        entity: entity,
+                        num: certainNum,
+                        categories: entities[entity].categories
+                    },
+                    optionB: {
+                        text: `${probability}% chance of saving ${riskyNum} ${getDisplay(entity, riskyNum)}`,
+                        entity: entity,
+                        num: riskyNum,
+                        categories: entities[entity].categories
+                    }
+                };
+            },
+
+            // Food ethics
+            function foodEthics() {
+                const animal = pickRandom(['pig', 'cow', 'chicken', 'sheep', 'fish']);
+                const animalNum = pickRandomNumber([1, 5, 10, 50, 100]);
+                const human = pickRandom(allHumans);
+                const humanNum = pickRandomNumber([1, 5, 10, 50]);
+                const duration = pickRandom(['a week', 'a month', 'a year']);
+                
+                return {
+                    category: 'food-ethics',
+                    framing: 'Food Ethics',
+                    question: `Farming ${animalNum} ${getDisplay(animal, animalNum)} for food would feed ${humanNum} ${getDisplay(human, humanNum)} for ${duration}. Is this acceptable?`,
+                    optionA: {
+                        text: `Yes, farm the ${getDisplay(animal, animalNum)} for food`,
+                        entity: human,
+                        num: humanNum,
+                        categories: entities[human].categories
+                    },
+                    optionB: {
+                        text: `No, do not farm the ${getDisplay(animal, animalNum)}`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    }
+                };
+            },
+
+            // Conservation vs human needs
+            function conservationVsHumans() {
+                const animal = pickRandom(['elephant', 'gorilla', 'orangutan', 'whale', 'dolphin', 'chimpanzee', 'bear', 'wolf']);
+                const animalNum = pickRandomNumber([10, 50, 100, 500]);
+                const human = pickRandom(allHumans);
+                const humanNum = pickRandomNumber([100, 500, 1000, 5000]);
+                const scenario = pickRandom([
+                    'expanding farmland',
+                    'building housing',
+                    'mining for resources',
+                    'building a dam for electricity'
+                ]);
+                
+                return {
+                    category: 'conservation',
+                    framing: 'Conservation Ethics',
+                    question: `${scenario.charAt(0).toUpperCase() + scenario.slice(1)} would displace and likely kill ${animalNum} ${getDisplay(animal, animalNum)}, but would benefit ${humanNum.toLocaleString()} ${getDisplay(human, humanNum)}. Should this proceed?`,
+                    optionA: {
+                        text: `Yes, proceed with ${scenario}`,
+                        entity: human,
+                        num: humanNum,
+                        categories: entities[human].categories
+                    },
+                    optionB: {
+                        text: `No, protect the ${getDisplay(animal, animalNum)}`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    }
+                };
+            },
+
+            // Pet vs livestock
+            function petVsLivestock() {
+                const pet = pickRandom(['dog', 'cat', 'rabbit', 'horse']);
+                const livestock = pickRandom(['pig', 'cow', 'chicken', 'sheep']);
+                const petNum = pickRandomNumber([1, 1, 1, 2]);
+                const livestockNum = pickRandomNumber([1, 2, 5, 10, 20]);
+                
+                return {
+                    category: 'animal-comparison',
+                    framing: 'Animal Comparison',
+                    question: `You can only save one group. Which do you save?`,
+                    optionA: {
+                        text: `Save ${petNum} ${getDisplay(pet, petNum)}`,
+                        entity: pet,
+                        num: petNum,
+                        categories: entities[pet].categories
+                    },
+                    optionB: {
+                        text: `Save ${livestockNum} ${getDisplay(livestock, livestockNum)}`,
+                        entity: livestock,
+                        num: livestockNum,
+                        categories: entities[livestock].categories
+                    }
+                };
+            },
+
+            // Cosmetic testing
+            function cosmeticTesting() {
+                const animal = pickRandom(['rabbit', 'mouse', 'rat', 'monkey']);
+                const animalNum = pickRandomNumber([10, 50, 100, 500]);
+                const probability = pickRandomNumber([1, 2, 5, 10]);
+                const humanNum = pickRandomNumber([1000, 5000, 10000, 100000]);
+                
+                return {
+                    category: 'testing-ethics',
+                    framing: 'Product Testing',
+                    question: `A new cosmetic product requires testing on ${animalNum} ${getDisplay(animal, animalNum)}. Without testing, there's a ${probability}% chance of allergic reactions affecting some of ${humanNum.toLocaleString()} potential users. Should the testing proceed?`,
+                    optionA: {
+                        text: `Yes, test on ${animalNum} ${getDisplay(animal, animalNum)}`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    },
+                    optionB: {
+                        text: `No, release untested (risk to humans)`,
+                        entity: 'human',
+                        num: Math.round(humanNum * probability / 100),
+                        categories: entities.human.categories
+                    }
+                };
+            },
+
+            // Vaccine development
+            function vaccineDevelopment() {
+                const animal = pickRandom(['mouse', 'rat', 'monkey', 'pig']);
+                const animalNum = pickRandomNumber([100, 500, 1000, 5000]);
+                const human = pickRandom(allHumans);
+                const humansSaved = pickRandomNumber([10000, 50000, 100000, 1000000]);
+                const yearsDelay = pickRandomNumber([2, 3, 5, 10]);
+                
+                return {
+                    category: 'medical-research',
+                    framing: 'Vaccine Ethics',
+                    question: `A vaccine that could save ${humansSaved.toLocaleString()} ${getDisplay(human, humansSaved)} per year requires testing on ${animalNum.toLocaleString()} ${getDisplay(animal, animalNum)}. Alternative methods would delay the vaccine by ${yearsDelay} years. Should animal testing proceed?`,
+                    optionA: {
+                        text: `Yes, test on animals (vaccine available sooner)`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    },
+                    optionB: {
+                        text: `No, use alternatives (${yearsDelay}-year delay)`,
+                        entity: human,
+                        num: humansSaved * yearsDelay,
+                        categories: entities[human].categories
+                    }
+                };
+            },
+
+            // Endangered species vs human development
+            function endangeredVsDevelopment() {
+                const animal = pickRandom(['gorilla', 'orangutan', 'elephant', 'whale', 'chimpanzee']);
+                const animalNum = pickRandomNumber([50, 100, 200, 500]);
+                const human = pickRandom(nationalityEntities);
+                const humanNum = pickRandomNumber([1000, 5000, 10000]);
+                const percentSpecies = pickRandomNumber([5, 10, 20, 30]);
+                
+                return {
+                    category: 'conservation',
+                    framing: 'Species Preservation',
+                    question: `A development project would benefit ${humanNum.toLocaleString()} ${getDisplay(human, humanNum)} but would kill ${animalNum} ${getDisplay(animal, animalNum)} (approximately ${percentSpecies}% of the remaining wild population). Should the project proceed?`,
+                    optionA: {
+                        text: `Yes, proceed with development`,
+                        entity: human,
+                        num: humanNum,
+                        categories: entities[human].categories
+                    },
+                    optionB: {
+                        text: `No, protect the endangered ${getDisplay(animal, animalNum)}`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    }
+                };
+            },
+
+            // Lab-grown meat investment
+            function labGrownMeat() {
+                const animal = pickRandom(['cow', 'pig', 'chicken']);
+                const animalNum = pickRandomNumber([1000000, 5000000, 10000000]);
+                const investmentYears = pickRandomNumber([5, 10, 15, 20]);
+                
+                return {
+                    category: 'food-ethics',
+                    framing: 'Future Ethics',
+                    question: `Investing heavily in lab-grown meat research could eliminate the need to farm ${animalNum.toLocaleString()} ${getDisplay(animal, animalNum)} per year, but the technology won't be viable for ${investmentYears} years. In the meantime, current farming continues. Is this investment worthwhile?`,
+                    optionA: {
+                        text: `Yes, invest for the future`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    },
+                    optionB: {
+                        text: `No, focus on current welfare improvements`,
+                        entity: animal,
+                        num: Math.round(animalNum * 0.1),
+                        categories: entities[animal].categories
+                    }
+                };
+            },
+
+            // Human life stages comparison (non-nationality)
+            function humanLifeStages() {
+                const younger = pickRandom(['child', 'adult']);
+                const older = younger === 'child' ? pickRandom(['adult', 'elderly']) : 'elderly';
+                const youngerNum = pickRandomNumber([1, 1, 2]);
+                const olderNum = pickRandomNumber([1, 2, 3, 5]);
+                
+                return {
+                    category: 'human-comparison',
+                    framing: 'Life Stage Comparison',
+                    question: 'You can only save one group. Which do you save?',
+                    optionA: {
+                        text: `Save ${youngerNum} ${getDisplay(younger, youngerNum)}`,
+                        entity: younger,
+                        num: youngerNum,
+                        categories: entities[younger].categories
+                    },
+                    optionB: {
+                        text: `Save ${olderNum} ${getDisplay(older, olderNum)}`,
+                        entity: older,
+                        num: olderNum,
+                        categories: entities[older].categories
+                    }
+                };
+            },
+
+            // Rescue scenario
+            function rescueScenario() {
+                const useNationality = Math.random() < 0.3;
+                let entityA = useNationality ? pickRandom(nationalityEntities) : pickRandom(humanEntities);
+                let entityB = pickRandom(animalEntities);
+                
+                const location = pickRandom(['a burning building', 'a sinking boat', 'a collapsed mine', 'floodwaters']);
+                const numA = pickRandomNumber([1, 1, 2]);
+                const numB = pickRandomNumber([1, 2, 5, 10]);
+                
+                return {
+                    category: 'rescue',
+                    framing: 'Rescue Scenario',
+                    question: `${numA} ${getDisplay(entityA, numA)} and ${numB} ${getDisplay(entityB, numB)} are trapped in ${location}. You can only rescue one group. Which do you save?`,
+                    optionA: {
+                        text: `Rescue ${numA} ${getDisplay(entityA, numA)}`,
+                        entity: entityA,
+                        num: numA,
+                        categories: entities[entityA].categories
+                    },
+                    optionB: {
+                        text: `Rescue ${numB} ${getDisplay(entityB, numB)}`,
+                        entity: entityB,
+                        num: numB,
+                        categories: entities[entityB].categories
+                    }
+                };
+            },
+
+            // Resource allocation
+            function resourceAllocation() {
+                const useNationality = Math.random() < 0.3;
+                let human = useNationality ? pickRandom(nationalityEntities) : pickRandom(humanEntities);
+                let animal = pickRandom(animalEntities);
+                
+                const humanNum = pickRandomNumber([100, 500, 1000, 5000]);
+                const animalNum = pickRandomNumber([100, 500, 1000, 5000]);
+                const resource = pickRandom(['medical supplies', 'food aid', 'clean water', 'shelter']);
+                
+                return {
+                    category: 'resource-allocation',
+                    framing: 'Resource Allocation',
+                    question: `Limited ${resource} can help either ${humanNum.toLocaleString()} ${getDisplay(human, humanNum)} or ${animalNum.toLocaleString()} ${getDisplay(animal, animalNum)} affected by a disaster. How should it be allocated?`,
+                    optionA: {
+                        text: `Prioritise the ${getDisplay(human, humanNum)}`,
+                        entity: human,
+                        num: humanNum,
+                        categories: entities[human].categories
+                    },
+                    optionB: {
+                        text: `Prioritise the ${getDisplay(animal, animalNum)}`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    }
+                };
+            },
+
+            // Xenotransplantation
+            function xenotransplantation() {
+                const animal = pickRandom(['pig', 'monkey', 'chimpanzee']);
+                const human = pickRandom(allHumans);
+                const animalNum = pickRandomNumber([1, 1, 1, 5, 10]);
+                const humanNum = pickRandomNumber([1, 1, 1, 2, 3]);
+                const organ = pickRandom(['heart', 'kidney', 'liver']);
+                
+                return {
+                    category: 'organ-transplant',
+                    framing: 'Xenotransplantation',
+                    question: `${humanNum} ${getDisplay(human, humanNum)} need ${organ} transplants to survive. Genetically modified ${getDisplay(animal, animalNum)} could provide compatible organs, but ${animalNum} ${getDisplay(animal, animalNum)} would need to be killed. Is this acceptable?`,
+                    optionA: {
+                        text: `Yes, use the ${getDisplay(animal, animalNum)} organs`,
+                        entity: human,
+                        num: humanNum,
+                        categories: entities[human].categories
+                    },
+                    optionB: {
+                        text: `No, do not kill the ${getDisplay(animal, animalNum)}`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    }
+                };
+            },
+
+            // Pest control
+            function pestControl() {
+                const pest = pickRandom(['rat', 'mouse', 'insect']);
+                const human = pickRandom(allHumans);
+                const pestNum = pickRandomNumber([100, 500, 1000, 5000]);
+                const humanNum = pickRandomNumber([10, 50, 100, 500]);
+                const disease = pickRandom(['disease', 'crop destruction', 'property damage']);
+                
+                return {
+                    category: 'pest-control',
+                    framing: 'Pest Control',
+                    question: `An infestation of ${getDisplay(pest, pestNum)} is causing ${disease} affecting ${humanNum} ${getDisplay(human, humanNum)}. Exterminating the ${getDisplay(pest, pestNum)} would solve the problem. Is this acceptable?`,
+                    optionA: {
+                        text: `Yes, exterminate the ${getDisplay(pest, pestNum)}`,
+                        entity: human,
+                        num: humanNum,
+                        categories: entities[human].categories
+                    },
+                    optionB: {
+                        text: `No, use humane relocation (less effective)`,
+                        entity: pest,
+                        num: pestNum,
+                        categories: entities[pest].categories
+                    }
+                };
+            },
+
+            // Hunting for population control
+            function huntingControl() {
+                const animal = pickRandom(['deer', 'bear', 'wolf', 'elephant']);
+                const animalNum = pickRandomNumber([50, 100, 200, 500]);
+                const ecosystemBenefit = pickRandom(['prevent overgrazing', 'protect endangered species', 'reduce human-wildlife conflict', 'maintain ecosystem balance']);
+                
+                return {
+                    category: 'conservation',
+                    framing: 'Population Control',
+                    question: `Culling ${animalNum} ${getDisplay(animal, animalNum)} would ${ecosystemBenefit}. Without intervention, the population will cause ecological damage. Is culling acceptable?`,
+                    optionA: {
+                        text: `Yes, cull ${animalNum} ${getDisplay(animal, animalNum)}`,
+                        entity: animal,
+                        num: animalNum,
+                        categories: entities[animal].categories
+                    },
+                    optionB: {
+                        text: `No, let nature take its course`,
+                        entity: animal,
+                        num: Math.round(animalNum * 0.5),
+                        categories: entities[animal].categories
+                    }
+                };
+            }
+        ];
+
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        let state = {
+            sessionId: generateSessionId(),
+            sessionStart: new Date().toISOString(),
+            questionCount: 0,
+            responses: [],
+            eloRatings: {},
+            started: false
+        };
+
+        function generateSessionId() {
+            return 'sess_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('moralWeightsState_v4');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state = { ...state, ...parsed };
+            }
+            // Initialize Elo ratings for all entities
+            Object.keys(entities).forEach(e => {
+                if (!state.eloRatings[e]) {
+                    state.eloRatings[e] = { rating: 0, comparisons: 0, wins: 0, losses: 0 };
+                }
+            });
+        }
+
+        function saveState() {
+            localStorage.setItem('moralWeightsState_v4', JSON.stringify(state));
+        }
+
+        // ============================================
+        // ELO RATING SYSTEM
+        // ============================================
+        function calculateEloChange(winnerRating, loserRating, numWinner, numLoser) {
+            const K = 32;
+            const expectedWinner = 1 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
+            const numberRatio = Math.log10(Math.max(numLoser / numWinner, 1) + 1);
+            const adjustedK = K * (1 + numberRatio * 0.5);
+            return adjustedK * (1 - expectedWinner);
+        }
+
+        function updateEloRatings(winnerId, loserId, numWinner, numLoser) {
+            const winner = state.eloRatings[winnerId];
+            const loser = state.eloRatings[loserId];
+            
+            if (!winner || !loser) return;
+            
+            const change = calculateEloChange(winner.rating, loser.rating, numWinner, numLoser);
+            
+            winner.rating += change;
+            winner.comparisons++;
+            winner.wins++;
+            
+            loser.rating -= change;
+            loser.comparisons++;
+            loser.losses++;
+        }
+
+        // ============================================
+        // SCENARIO GENERATION
+        // ============================================
+        function generateNextScenario() {
+            const generator = pickRandom(scenarioGenerators);
+            const scenario = generator();
+            scenario.id = `q${state.questionCount}_${Date.now()}`;
+            return scenario;
+        }
+
+        let currentScenario = null;
+
+        // ============================================
+        // UI RENDERING
+        // ============================================
+        function renderScenario() {
+            currentScenario = generateNextScenario();
+            const container = document.getElementById('scenarioContainer');
+            
+            container.innerHTML = `
+                <div class="scenario-card">
+                    <div class="scenario-meta">
+                        <span class="scenario-category">${currentScenario.category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                        <span class="scenario-framing">${currentScenario.framing}</span>
+                        <span class="scenario-number">Question ${state.questionCount + 1}</span>
+                    </div>
+                    <p class="scenario-question">${currentScenario.question}</p>
+                    <div class="choices">
+                        <button class="choice-btn" data-choice="A">
+                            <div class="choice-header">
+                                <span class="choice-label">Option A</span>
+                                <div class="choice-tags">
+                                    ${currentScenario.optionA.categories.slice(0, 3).map(c => `<span class="choice-tag">${c}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="choice-text">${currentScenario.optionA.text}</div>
+                        </button>
+                        <button class="choice-btn" data-choice="B">
+                            <div class="choice-header">
+                                <span class="choice-label">Option B</span>
+                                <div class="choice-tags">
+                                    ${currentScenario.optionB.categories.slice(0, 3).map(c => `<span class="choice-tag">${c}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="choice-text">${currentScenario.optionB.text}</div>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const choice = btn.dataset.choice;
+                    
+                    // Determine winner/loser for Elo
+                    const winner = choice === 'A' ? currentScenario.optionA : currentScenario.optionB;
+                    const loser = choice === 'A' ? currentScenario.optionB : currentScenario.optionA;
+                    
+                    // Update Elo ratings
+                    updateEloRatings(winner.entity, loser.entity, winner.num, loser.num);
+                    
+                    // Store response
+                    state.responses.push({
+                        id: currentScenario.id,
+                        choice,
+                        scenario: currentScenario,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    state.questionCount++;
+                    saveState();
+                    
+                    // Send to backend
+                    submitResponse(currentScenario.id, choice, currentScenario);
+                    
+                    // Visual feedback
+                    btn.classList.add(choice === 'A' ? 'selected-a' : 'selected-b');
+                    
+                    // Auto-advance
+                    setTimeout(() => {
+                        renderScenario();
+                    }, 200);
+                });
+            });
+
+            document.getElementById('progressText').textContent = `Question ${state.questionCount + 1}`;
+        }
+
+        // ============================================
+        // RESULTS DISPLAY
+        // ============================================
+        function updateResults() {
+            updateSessionInfo();
+            updateStats();
+            updateWeights();
+            updateCategoryWeights();
+            updateUntestedList();
+            updateResponseList();
+            updateInsights();
+            updateExportData();
+        }
+
+        function updateSessionInfo() {
+            document.getElementById('sessionId').textContent = state.sessionId;
+            document.getElementById('responseCount').textContent = state.responses.length;
+            document.getElementById('sessionStart').textContent = new Date(state.sessionStart).toLocaleString();
+        }
+
+        function updateStats() {
+            const comparedEntities = Object.values(state.eloRatings).filter(e => e.comparisons > 0).length;
+            const categories = new Set();
+            Object.entries(state.eloRatings).forEach(([entity, data]) => {
+                if (data.comparisons > 0 && entities[entity]) {
+                    entities[entity].categories.forEach(c => categories.add(c));
+                }
+            });
+            
+            document.getElementById('statAnswered').textContent = state.responses.length;
+            document.getElementById('statEntities').textContent = comparedEntities;
+            document.getElementById('statCategories').textContent = categories.size;
+        }
+
+        function updateWeights() {
+            const container = document.getElementById('weightsContainer');
+            
+            const compared = Object.entries(state.eloRatings)
+                .filter(([_, data]) => data.comparisons > 0)
+                .sort((a, b) => b[1].rating - a[1].rating);
+            
+            if (compared.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚖️</div>
+                        <p>Complete some scenarios to see your moral weights!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const maxAbs = Math.max(...compared.map(([_, d]) => Math.abs(d.rating)), 1);
+
+            container.innerHTML = compared.map(([entity, data]) => {
+                const rating = data.rating;
+                const isPositive = rating >= 0;
+                const barWidth = (Math.abs(rating) / maxAbs) * 50;
+                const valueClass = rating > 0.5 ? 'positive' : (rating < -0.5 ? 'negative' : 'neutral');
+                
+                return `
+                    <div class="weight-item">
+                        <span class="weight-label">${entities[entity]?.display || entity}</span>
+                        <div class="weight-bar-container">
+                            <div class="weight-bar-zero"></div>
+                            <div class="weight-bar ${isPositive ? 'positive' : 'negative'}" 
+                                 style="width: ${barWidth}%;"></div>
+                        </div>
+                        <span class="weight-value ${valueClass}">${rating >= 0 ? '+' : ''}${rating.toFixed(1)}</span>
+                        <span class="weight-comparisons">(${data.comparisons})</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCategoryWeights() {
+            const container = document.getElementById('categoryWeights');
+            
+            const categoryScores = {};
+            
+            Object.entries(state.eloRatings).forEach(([entity, data]) => {
+                if (data.comparisons === 0) return;
+                const ent = entities[entity];
+                if (!ent) return;
+                
+                ent.categories.forEach(cat => {
+                    if (!categoryScores[cat]) {
+                        categoryScores[cat] = { total: 0, count: 0 };
+                    }
+                    categoryScores[cat].total += data.rating;
+                    categoryScores[cat].count++;
+                });
+            });
+
+            const sortedCats = Object.entries(categoryScores)
+                .map(([cat, data]) => ({ cat, avg: data.total / data.count, count: data.count }))
+                .sort((a, b) => b.avg - a.avg);
+
+            if (sortedCats.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Complete some scenarios to see category weights.</p></div>';
+                return;
+            }
+
+            const maxAbs = Math.max(...sortedCats.map(c => Math.abs(c.avg)), 1);
+
+            container.innerHTML = sortedCats.map(({ cat, avg, count }) => {
+                const isPositive = avg >= 0;
+                const barWidth = (Math.abs(avg) / maxAbs) * 50;
+                const valueClass = avg > 0.5 ? 'positive' : (avg < -0.5 ? 'negative' : 'neutral');
+                
+                return `
+                    <div class="weight-item">
+                        <span class="weight-label">${cat}</span>
+                        <div class="weight-bar-container">
+                            <div class="weight-bar-zero"></div>
+                            <div class="weight-bar ${isPositive ? 'positive' : 'negative'}" 
+                                 style="width: ${barWidth}%;"></div>
+                        </div>
+                        <span class="weight-value ${valueClass}">${avg >= 0 ? '+' : ''}${avg.toFixed(1)}</span>
+                        <span class="weight-comparisons">(${count})</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateUntestedList() {
+            const container = document.getElementById('untestedList');
+            const untested = Object.entries(state.eloRatings)
+                .filter(([_, data]) => data.comparisons === 0)
+                .map(([entity]) => entity);
+            
+            if (untested.length === 0) {
+                container.innerHTML = '<span class="untested-item" style="background: var(--selection-a); border-color: var(--selection-a-border); color: var(--selection-a-border);">All entities have been compared!</span>';
+                return;
+            }
+            
+            container.innerHTML = untested.map(e => 
+                `<span class="untested-item">${entities[e]?.display || e}</span>`
+            ).join('');
+        }
+
+        function updateResponseList() {
+            const container = document.getElementById('responseList');
+            
+            if (state.responses.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No responses recorded yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const recentResponses = state.responses.slice(-15).reverse();
+            
+            container.innerHTML = recentResponses.map(resp => {
+                const scenario = resp.scenario;
+                const chosen = resp.choice === 'A' ? scenario.optionA : scenario.optionB;
+                const rejected = resp.choice === 'A' ? scenario.optionB : scenario.optionA;
+                
+                return `
+                    <div class="response-item">
+                        <span class="response-question">
+                            Chose <strong>${chosen.text}</strong> over ${rejected.text}
+                        </span>
+                        <span class="response-badge choice-${resp.choice.toLowerCase()}">
+                            ${resp.choice}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+            
+            if (state.responses.length > 15) {
+                container.innerHTML += `<p style="text-align: center; color: var(--text-muted); margin-top: 1rem;">Showing last 15 of ${state.responses.length} responses</p>`;
+            }
+        }
+
+        function updateInsights() {
+            const box = document.getElementById('insightsBox');
+            const content = document.getElementById('insightsContent');
+            
+            if (state.responses.length < 10) {
+                box.style.display = 'none';
+                return;
+            }
+            
+            const insights = [];
+            const ratings = state.eloRatings;
+            
+            // Human vs Animal gap
+            const humanEnts = Object.entries(ratings).filter(([e, d]) => 
+                d.comparisons > 0 && entities[e]?.isHuman
+            );
+            const animalEnts = Object.entries(ratings).filter(([e, d]) => 
+                d.comparisons > 0 && !entities[e]?.isHuman
+            );
+            
+            if (humanEnts.length > 0 && animalEnts.length > 0) {
+                const avgHuman = humanEnts.reduce((s, [_, d]) => s + d.rating, 0) / humanEnts.length;
+                const avgAnimal = animalEnts.reduce((s, [_, d]) => s + d.rating, 0) / animalEnts.length;
+                const gap = avgHuman - avgAnimal;
+                
+                if (gap > 20) {
+                    insights.push(`Strong human preference: Human entities average ${gap.toFixed(0)} points higher than animals.`);
+                } else if (gap > 10) {
+                    insights.push(`Moderate human preference: Human entities average ${gap.toFixed(0)} points higher than animals.`);
+                } else if (gap < 5) {
+                    insights.push(`Relatively equal weighting: Only ${gap.toFixed(0)} point gap between humans and animals on average.`);
+                }
+            }
+            
+            // Pet vs farm animal
+            const pets = ['dog', 'cat'].filter(e => ratings[e]?.comparisons > 0);
+            const farm = ['pig', 'cow', 'chicken'].filter(e => ratings[e]?.comparisons > 0);
+            
+            if (pets.length > 0 && farm.length > 0) {
+                const avgPet = pets.reduce((s, e) => s + ratings[e].rating, 0) / pets.length;
+                const avgFarm = farm.reduce((s, e) => s + ratings[e].rating, 0) / farm.length;
+                
+                if (avgPet > avgFarm + 10) {
+                    insights.push(`Pet bias detected: Companion animals rated ${(avgPet - avgFarm).toFixed(0)} points higher than farm animals.`);
+                }
+            }
+            
+            // Great apes
+            const greatApes = ['chimpanzee', 'gorilla', 'orangutan'].filter(e => ratings[e]?.comparisons > 0);
+            if (greatApes.length > 0 && animalEnts.length > greatApes.length) {
+                const avgApe = greatApes.reduce((s, e) => s + ratings[e].rating, 0) / greatApes.length;
+                const otherAnimals = animalEnts.filter(([e]) => !greatApes.includes(e));
+                if (otherAnimals.length > 0) {
+                    const avgOther = otherAnimals.reduce((s, [_, d]) => s + d.rating, 0) / otherAnimals.length;
+                    if (avgApe > avgOther + 15) {
+                        insights.push(`Great ape recognition: Apes rated ${(avgApe - avgOther).toFixed(0)} points higher than other animals.`);
+                    }
+                }
+            }
+            
+            insights.push(`Analysis based on ${state.responses.length} responses comparing ${Object.values(ratings).filter(r => r.comparisons > 0).length} entities.`);
+            
+            box.style.display = 'block';
+            content.innerHTML = insights.map(i => `<div class="insight-item">${i}</div>`).join('');
+        }
+
+        function updateExportData() {
+            const exportData = {
+                sessionId: state.sessionId,
+                sessionStart: state.sessionStart,
+                exportTime: new Date().toISOString(),
+                totalResponses: state.responses.length,
+                eloRatings: state.eloRatings,
+                responses: state.responses
+            };
+            
+            document.getElementById('exportData').value = JSON.stringify(exportData, null, 2);
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                
+                if (tab.dataset.tab === 'results') {
+                    updateResults();
+                }
+            });
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            state.started = true;
+            saveState();
+            document.getElementById('introSection').style.display = 'none';
+            document.getElementById('scenarioSection').style.display = 'block';
+            renderScenario();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all responses? This cannot be undone.')) {
+                state.responses = [];
+                state.questionCount = 0;
+                state.sessionId = generateSessionId();
+                state.sessionStart = new Date().toISOString();
+                Object.keys(state.eloRatings).forEach(e => {
+                    state.eloRatings[e] = { rating: 0, comparisons: 0, wins: 0, losses: 0 };
+                });
+                saveState();
+                updateResults();
+            }
+        });
+
+        document.getElementById('copyDataBtn').addEventListener('click', () => {
+            const textarea = document.getElementById('exportData');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Data copied to clipboard!');
+        });
+
+        document.getElementById('downloadDataBtn').addEventListener('click', () => {
+            const data = document.getElementById('exportData').value;
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `moral-weights-${state.sessionId}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // ============================================
+        // SUPABASE API SUBMISSION
+        // ============================================
+        const SUPABASE_URL = 'https://nxmdvyngyrkqykbsligr.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_OVcVdS_I6F0ODbP6b1IzrQ_xe9vx6fJ';
+        
+        async function submitResponse(scenarioId, choice, scenario) {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/responses`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        session_id: state.sessionId,
+                        scenario_id: scenarioId,
+                        choice: choice,
+                        scenario: {
+                            category: scenario.category,
+                            framing: scenario.framing,
+                            question: scenario.question,
+                            optionA: scenario.optionA,
+                            optionB: scenario.optionB
+                        },
+                        elo_ratings: state.eloRatings,
+                        user_agent: navigator.userAgent,
+                        question_number: state.questionCount
+                    })
+                });
+            } catch (e) {
+                console.log('Supabase submission failed, data saved locally');
+            }
+        }
+
+        // Submit session periodically (every 10 questions)
+        function maybeSubmitSession() {
+            if (state.responses.length > 0 && state.responses.length % 10 === 0) {
+                submitFullSession();
+            }
+        }
+
+        async function submitFullSession() {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/sessions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        session_id: state.sessionId,
+                        session_start: state.sessionStart,
+                        completed_at: new Date().toISOString(),
+                        total_responses: state.responses.length,
+                        elo_ratings: state.eloRatings,
+                        responses: state.responses.map(r => ({
+                            scenarioId: r.id,
+                            choice: r.choice,
+                            category: r.scenario?.category
+                        })),
+                        user_agent: navigator.userAgent
+                    })
+                });
+            } catch (e) {
+                console.log('Supabase session submission failed');
+            }
+        }
+
+        // Submit on page unload
+        window.addEventListener('beforeunload', () => {
+            if (state.responses.length > 0) {
+                const data = JSON.stringify({
+                    session_id: state.sessionId,
+                    session_start: state.sessionStart,
+                    completed_at: new Date().toISOString(),
+                    total_responses: state.responses.length,
+                    elo_ratings: state.eloRatings,
+                    user_agent: navigator.userAgent
+                });
+                navigator.sendBeacon(`${SUPABASE_URL}/rest/v1/sessions?apikey=${SUPABASE_KEY}`, data);
+            }
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        loadState();
+        
+        if (state.started) {
+            document.getElementById('introSection').style.display = 'none';
+            document.getElementById('scenarioSection').style.display = 'block';
+            renderScenario();
+        }
+    </script>
 </body>
 </html>
